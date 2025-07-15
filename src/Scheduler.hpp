@@ -36,10 +36,7 @@ namespace WP17Scheduler {
 /**
  * @brief Scheduler class 
  * This class keeps track of events, threads and algorithms. 
- * The constructor parameters a are:
- * @param events Number of events
- * @param threads number of threads
- * @param slots Number of slots (i.e. concurrent events being processed, aso equal to the number of CUDA streams).
+ * 
  * @warning This class itself is not thread safe.
  */
 class Scheduler {
@@ -66,9 +63,9 @@ public:
 
    /**
     * @brief Scheduler constructor
-    * @param events Number of events
     * @param threads number of threads
     * @param slots Number of slots (i.e. concurrent events being processed).
+    * @param executionStrategy Execution strategy for the algorithms.
     */
    Scheduler(int threads = 4, int slots = 4, ExecutionStrategy executionStrategy = ExecutionStrategy::SingleLaunch);
 

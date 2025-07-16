@@ -146,9 +146,12 @@ StatusCode Scheduler::update() {
     if (!m_runStarted) {
         throw RuntimeError("In Scheduler::update(): Cannot update before run start");
     }
+
+    // Iterate on every algorithm of every slot to advance the necessary ones.
     for (int slot = 0; slot < m_slots; ++slot) {
         SlotState& slotState = m_slotStates[slot];
 
+        // If all algorithms in the slot are finished, clear the event store and reset the slot state.
         if (std::ranges::all_of(slotState.algorithms,
                                 [](const AlgorithmState& algo) { return algo.execState == AlgExecState::FINISHED; })) {
             EventContext ctx{slotState.eventNumber, slot, this, m_streams[slot]};
@@ -161,10 +164,12 @@ StatusCode Scheduler::update() {
             slotState.eventManager->reset();
         }
 
+        // If the event number is already at the target, skip this slot.
         if (slotState.eventNumber >= m_targetEventId) {
             continue;
         }
 
+        // Handle each algorithm in the slot.
         for (std::size_t alg = 0; alg < m_algorithms.size(); ++alg) {
             auto& algoSt = slotState.algorithms[alg];
             switch (algoSt.execState.getState()) {

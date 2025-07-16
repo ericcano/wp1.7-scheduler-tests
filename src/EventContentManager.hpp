@@ -45,13 +45,22 @@ public:
     */
    StatusCode setAlgExecuted(std::size_t alg);
 
+   /**
+    * @brief Get the list of algorithms that are ready to be executed following the completion of the given algorithm.
+    * @param algIdx The index of the algorithm that has completed.
+    * @return A vector of indices of the algorithms that are ready to be executed.
+    */
+   std::vector<std::size_t> getDependantAndReadyAlgs(
+       std::size_t algIdx) const;
+
    // Check if an algorithm is ready to be run.
    /**
     * @brief Check if an algorithm's data dependencies are availble.
+    * @param algIdx The index of the algorithm to check.
     * @note Thread safe
     * @todo Could be renamed to `areAlgoDependenciesMet()`.
     */
-   bool isAlgExecutable(std::size_t alg) const;
+   bool isAlgExecutable(std::size_t algIdx) const;
 
    // Reset the event store content.
    /**
@@ -61,12 +70,19 @@ public:
 
 private:
    /// Type used for bitset.
-   typedef boost::dynamic_bitset<> DataObjColl_t;
+   class DataObjColl_t: public boost::dynamic_bitset<> {
+   public:
+      void setBits(const std::vector<std::string>& allObjectsVec,
+              const std::vector<std::string>& objects);
+   };
 
-   /// Per-algorithm dependencies
+   /// Per-algorithm dependencies (which producats the algorithm depends on).
    std::vector<DataObjColl_t> m_algDependencies;
 
-   /// Per-algorithm products
+   /// Per-algorithm dependants (which algorithms depend on this ones products).
+   std::vector<DataObjColl_t> m_algDependants;
+
+   /// Per-algorithm products (which products the algorithm produces).
    std::vector<DataObjColl_t> m_algProducts;
 
    /// Current content of the event store.

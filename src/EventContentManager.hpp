@@ -4,6 +4,7 @@
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <cstdlib>
 #include <functional>
+#include <iostream>
 #include <mutex>
 #include <vector>
 
@@ -67,6 +68,12 @@ public:
     * @brief Reset the event store content.s
     */
    void reset();
+
+   /**
+    * @brief Dump the contents of the EventContentManager to std::ostream.
+    * @param os Output stream to write to.
+    */
+   void dumpContents(std::ostream& os = std::cout) const;
 
 private:
    /// Type used for bitset.

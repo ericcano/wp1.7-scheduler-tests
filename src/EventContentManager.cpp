@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <ostream>
 #include <set>
 
 #include "AlgorithmBase.hpp"
@@ -125,11 +126,11 @@ StatusCode EventContentManager::setAlgExecuted(std::size_t alg) {
 
 std::vector<std::size_t> EventContentManager::getDependantAndReadyAlgs(
     std::size_t algIdx) const {
-   assert(algIdx < m_algDependencies.size());
+   assert(algIdx < m_algDependants.size());
    std::lock_guard<std::mutex> guard(m_storeContentMutex);
    std::vector<std::size_t> readyAlgs;
 
-   auto &deps = m_algDependencies[algIdx];
+   auto &deps = m_algDependants[algIdx];
    std::size_t i = deps.find_first();
    while (i != boost::dynamic_bitset<>::npos) {
       if (m_algDependencies[i].is_subset_of(m_algContent)) {
@@ -150,4 +151,50 @@ bool EventContentManager::isAlgExecutable(std::size_t algIdx) const {
 
 void EventContentManager::reset() {
    m_algContent.reset();
+}
+
+void EventContentManager::dumpContents(std::ostream& os) const {
+    std::lock_guard<std::mutex> guard(m_storeContentMutex);
+    os << "EventContentManager dump:\n";
+    os << "Dependencies per algorithm:\n";
+    for (size_t i = 0; i < m_algDependencies.size(); ++i) {
+        os << "  Alg " << i << ": ";
+        bool first = true;
+        for (size_t j = m_algDependencies[i].find_first(); j != boost::dynamic_bitset<>::npos; j = m_algDependencies[i].find_next(j)) {
+            if (!first) os << ", ";
+            os << j;
+            first = false;
+        }
+        os << "\n";
+    }
+    os << "Products per algorithm:\n";
+    for (size_t i = 0; i < m_algProducts.size(); ++i) {
+        os << "  Alg " << i << ": ";
+        bool first = true;
+        for (size_t j = m_algProducts[i].find_first(); j != boost::dynamic_bitset<>::npos; j = m_algProducts[i].find_next(j)) {
+            if (!first) os << ", ";
+            os << j;
+            first = false;
+        }
+        os << "\n";
+    }
+    os << "Dependants per algorithm:\n";
+    for (size_t i = 0; i < m_algDependants.size(); ++i) {
+        os << "  Alg " << i << ": ";
+        bool first = true;
+        for (size_t j = m_algDependants[i].find_first(); j != boost::dynamic_bitset<>::npos; j = m_algDependants[i].find_next(j)) {
+            if (!first) os << ", ";
+            os << j;
+            first = false;
+        }
+        os << "\n";
+    }
+    os << "Current event content bitset:\n  ";
+    bool first = true;
+    for (size_t j = m_algContent.find_first(); j != boost::dynamic_bitset<>::npos; j = m_algContent.find_next(j)) {
+        if (!first) os << ", ";
+        os << j;
+        first = false;
+    }
+    os << "\n";
 }

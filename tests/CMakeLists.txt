@@ -2,6 +2,11 @@ add_executable(TestEventStore TestEventStore.cpp)
 target_link_libraries(TestEventStore PRIVATE CoScheduler)
 add_test(NAME TestEventStore COMMAND TestEventStore)
 
+find_package(GTest REQUIRED)
+add_executable(TestEventContentManager TestEventContentManager.cpp)
+target_link_libraries(TestEventContentManager PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+add_test(NAME TestEventContentManager COMMAND TestEventContentManager)
+
 ## TBB tests
 add_executable(TestTBBTaskSuspension TestTBBTaskSuspension.cpp)
 target_link_libraries(TestTBBTaskSuspension PUBLIC TBB::tbb CUDA::cudart) 

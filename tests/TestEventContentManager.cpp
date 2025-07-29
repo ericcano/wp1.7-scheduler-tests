@@ -74,6 +74,117 @@ TEST_F(EventContentManagerTest, DependencyMap) {
   ASSERT_EQ(depMapAfterC.size(), 0); // No more algorithms should be ready
 }
 
+#define EXPECT_READY(idx, expected) expect_ready(idx, expected, __FILE__, __LINE__)
+
+#define AlgAIdx 0
+#define AlgBIdx 1
+#define AlgCIdx 2
+#define AlgDIdx 3
+#define AlgEIdx 4
+
+TEST_F(EventContentManagerTest, MultipleDependencies) {
+    // Index: 0=A, 1=B, 2=C, 3=D, 4=E
+    MockAlgorithm algA{{}, {"prodA"}};
+    MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
+    MockAlgorithm algC{{"prodA"}, {"prodC"}};
+    MockAlgorithm algD{{"prodC"}, {"prodD"}};
+    MockAlgorithm algE{{"prodC", "prodD"}, {"prodE"}};
+    // Note: direct dependants are:
+    // A -> B, C
+    // B ->
+    // C -> D, E
+    // D -> E
+    // E -> B
+    // So the execution order is: A -> C -> D -> E -> B
+    std::vector<std::reference_wrapper<AlgorithmBase>> algs{algA, algB, algC, algD, algE};
+    EventContentManager m{algs};
+
+    // Helper lambda to check expected ready dependants, with file/line
+    auto expect_ready = [&](int idx, std::vector<size_t> expected, const char* file, int line) {
+        auto v = m.getDependantAndReadyAlgs(idx);
+        std::sort(v.begin(), v.end());
+        std::sort(expected.begin(), expected.end());
+        std::ostringstream oss;
+        oss << "[" << file << ":" << line << "] getDependantAndReadyAlgs(" << idx << ") expected: ";
+        for (auto e : expected) oss << e << ",";
+        oss << " got: ";
+        for (auto e : v) oss << e << ",";
+        ASSERT_EQ(v, expected) << oss.str();
+    };
+
+    // At start, only A is ready (no dependencies)
+    ASSERT_TRUE(m.isAlgExecutable(AlgAIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgCIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgDIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgEIdx));
+    EXPECT_READY(AlgAIdx, {});
+    EXPECT_READY(AlgBIdx, {});
+    EXPECT_READY(AlgCIdx, {});
+    EXPECT_READY(AlgDIdx, {});
+    EXPECT_READY(AlgEIdx, {});
+
+    // Execute A
+    ASSERT_TRUE(m.setAlgExecuted(AlgAIdx));
+    // After A: C is ready, B and E still blocked
+    ASSERT_TRUE(m.isAlgExecutable(AlgCIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgDIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgEIdx));
+    EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgCIdx})); // A's dependants: C (B not yet ready)
+    EXPECT_READY(AlgBIdx, {});
+    EXPECT_READY(AlgCIdx, {});
+    EXPECT_READY(AlgDIdx, {});
+    EXPECT_READY(AlgEIdx, {});
+
+    // Execute C
+    ASSERT_TRUE(m.setAlgExecuted(AlgCIdx));
+    // After C: D is ready, E still blocked, B still blocked
+    ASSERT_TRUE(m.isAlgExecutable(AlgDIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgEIdx));
+    EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgCIdx}));
+    EXPECT_READY(AlgBIdx, {});
+    EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx})); // C's dependants: D (E not yet ready)
+    EXPECT_READY(AlgDIdx, {});
+    EXPECT_READY(AlgEIdx, {});
+
+    // Execute D
+    ASSERT_TRUE(m.setAlgExecuted(AlgDIdx));
+    // After D: E is ready, B still blocked
+    ASSERT_TRUE(m.isAlgExecutable(AlgEIdx));
+    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
+    EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgCIdx}));
+    EXPECT_READY(AlgBIdx, {});
+    EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx, AlgEIdx})); // C's dependants: D, E (now E is ready)
+    EXPECT_READY(AlgDIdx, (std::vector<size_t>{AlgEIdx})); // D's dependant: E
+    EXPECT_READY(AlgEIdx, {});
+
+    // Execute E
+    ASSERT_TRUE(m.setAlgExecuted(AlgEIdx));
+    // After E: B is ready
+    ASSERT_TRUE(m.isAlgExecutable(AlgBIdx));
+    EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgBIdx, AlgCIdx})); // A's dependants: B, C (B is now ready)
+    EXPECT_READY(AlgBIdx, {});
+    EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx, AlgEIdx}));
+    EXPECT_READY(AlgDIdx, (std::vector<size_t>{AlgEIdx}));
+    EXPECT_READY(AlgEIdx, (std::vector<size_t>{AlgBIdx})); // E's dependant: B
+
+    // Execute B
+    ASSERT_TRUE(m.setAlgExecuted(AlgBIdx));
+    // All done, none should be ready
+    for (int i = 0; i < 5; ++i) {
+        ASSERT_TRUE(m.isAlgExecutable(i));
+    }
+
+    // No changes after all executed
+    EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgBIdx, AlgCIdx}));
+    EXPECT_READY(AlgBIdx, {});
+    EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx, AlgEIdx}));
+    EXPECT_READY(AlgDIdx, (std::vector<size_t>{AlgEIdx}));
+    EXPECT_READY(AlgEIdx, (std::vector<size_t>{AlgBIdx}));
+}
+
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

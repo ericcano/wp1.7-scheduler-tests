@@ -60,7 +60,7 @@ TEST_F(EventContentManagerTest, DependencyMap) {
   auto s = manager.setAlgExecuted(0); // Mark algA as executed
   ASSERT_TRUE(s);
   const auto& depMapAfterA = manager.getDependantAndReadyAlgs(0);
-  manager.dumpContents();
+  //manager.dumpContents();
   ASSERT_EQ(depMapAfterA.size(), 1);
   ASSERT_EQ(depMapAfterA[0], 1); // algB should be ready
   s = manager.setAlgExecuted(1); // Mark algB as executed

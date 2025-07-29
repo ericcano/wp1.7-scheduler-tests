@@ -37,53 +37,40 @@ public:
     StatusCode finalize() override { return StatusCode::SUCCESS; }    
 };
 
-class EventContentManagerTest : public ::testing::Test {
-protected:
-    // Algorithms forming a chain: algA -> algB -> algC
+TEST(EventContentManagerTest, Chain) {
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
     std::vector<std::reference_wrapper<AlgorithmBase>> chainAlgs{algA, algB, algC};
     EventContentManager manager{chainAlgs};
-    void SetUp() override {
-        // Any setup code can go here if needed.
-    }
-    void TearDown() override {
-        // Any cleanup code can go here if needed.
-    }
-    
-};
-
-TEST_F(EventContentManagerTest, DependencyMap) {
-  const auto& depMap = manager.getDependantAndReadyAlgs(0);
-  ASSERT_EQ(depMap.size(), 0);
-  auto s = manager.setAlgExecuted(0); // Mark algA as executed
-  ASSERT_TRUE(s);
-  const auto& depMapAfterA = manager.getDependantAndReadyAlgs(0);
-  //manager.dumpContents();
-  ASSERT_EQ(depMapAfterA.size(), 1);
-  ASSERT_EQ(depMapAfterA[0], 1); // algB should be ready
-  s = manager.setAlgExecuted(1); // Mark algB as executed
-  ASSERT_TRUE(s);
-  const auto& depMapAfterB = manager.getDependantAndReadyAlgs(1);
-  ASSERT_EQ(depMapAfterB.size(), 1);
-  ASSERT_EQ(depMapAfterB[0], 2); // algC should be ready
-  s = manager.setAlgExecuted(2); // Mark algC as executed
-  ASSERT_TRUE(s);
-  const auto& depMapAfterC = manager.getDependantAndReadyAlgs(2);
-  ASSERT_EQ(depMapAfterC.size(), 0); // No more algorithms should be ready
+    const auto& depMap = manager.getDependantAndReadyAlgs(0);
+    ASSERT_EQ(depMap.size(), 0);
+    auto s = manager.setAlgExecuted(0); // Mark algA as executed
+    ASSERT_TRUE(s);
+    const auto& depMapAfterA = manager.getDependantAndReadyAlgs(0);
+    //manager.dumpContents();
+    ASSERT_EQ(depMapAfterA.size(), 1);
+    ASSERT_EQ(depMapAfterA[0], 1); // algB should be ready
+    s = manager.setAlgExecuted(1); // Mark algB as executed
+    ASSERT_TRUE(s);
+    const auto& depMapAfterB = manager.getDependantAndReadyAlgs(1);
+    ASSERT_EQ(depMapAfterB.size(), 1);
+    ASSERT_EQ(depMapAfterB[0], 2); // algC should be ready
+    s = manager.setAlgExecuted(2); // Mark algC as executed
+    ASSERT_TRUE(s);
+    const auto& depMapAfterC = manager.getDependantAndReadyAlgs(2);
+    ASSERT_EQ(depMapAfterC.size(), 0); // No more algorithms should be ready
 }
 
-#define EXPECT_READY(idx, expected) expect_ready(idx, expected, __FILE__, __LINE__)
+TEST(EventContentManagerTest, MultipleDependencies) {
+    
+    // Index: 0=A, 1=B, 2=C, 3=D, 4=EMockAlgorithm algA{{}, {"prodA"}};
+    constexpr int AlgAIdx = 0;
+    constexpr int AlgBIdx = 1;
+    constexpr int AlgCIdx = 2;
+    constexpr int AlgDIdx = 3;
+    constexpr int AlgEIdx = 4;
 
-#define AlgAIdx 0
-#define AlgBIdx 1
-#define AlgCIdx 2
-#define AlgDIdx 3
-#define AlgEIdx 4
-
-TEST_F(EventContentManagerTest, MultipleDependencies) {
-    // Index: 0=A, 1=B, 2=C, 3=D, 4=E
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
     MockAlgorithm algC{{"prodA"}, {"prodC"}};
@@ -111,6 +98,7 @@ TEST_F(EventContentManagerTest, MultipleDependencies) {
         for (auto e : v) oss << e << ",";
         ASSERT_EQ(v, expected) << oss.str();
     };
+#define EXPECT_READY(idx, expected) expect_ready(idx, expected, __FILE__, __LINE__)
 
     // At start, only A is ready (no dependencies)
     ASSERT_TRUE(m.isAlgExecutable(AlgAIdx));
@@ -172,7 +160,7 @@ TEST_F(EventContentManagerTest, MultipleDependencies) {
 
     // Execute B
     ASSERT_TRUE(m.setAlgExecuted(AlgBIdx));
-    // All done, none should be ready
+    // All done, all should be ready
     for (int i = 0; i < 5; ++i) {
         ASSERT_TRUE(m.isAlgExecutable(i));
     }
@@ -183,6 +171,7 @@ TEST_F(EventContentManagerTest, MultipleDependencies) {
     EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx, AlgEIdx}));
     EXPECT_READY(AlgDIdx, (std::vector<size_t>{AlgEIdx}));
     EXPECT_READY(AlgEIdx, (std::vector<size_t>{AlgBIdx}));
+#undef EXPECT_READY
 }
 
 

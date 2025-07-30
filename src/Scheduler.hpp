@@ -10,7 +10,9 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "AlgExecState.hpp"
@@ -247,4 +249,99 @@ public:
 
    /// @brief Exception class for scheduler errors.
    DEFINE_EXCEPTION(RuntimeError);
+};
+
+/**
+ * @brief A progressive build of the scheduler replacement.
+ */
+struct NewScheduler {
+public:
+   bool m_runStarted = false; // True if scheduler has started running
+   /**
+    * @brief Structure holding algorithm state and interface to run it.
+    */
+   struct NewAlgoSlot {
+      /**
+       * @brief Mutex to ensure that only one thread processes the algorithm. The processing can queue
+       * callbacks to GPU or other async resource, which will add the resuming of this algorithm to the 
+       * run queue.
+       * @note The locking model is to first hold the mutex on the algo and then briefly get the slot scheduling
+       * mutex to update the slot state.
+       */
+      std::mutex mutex;
+
+      /**
+       * @brief Algorithm coroutine.
+       */
+      AlgorithmBase::AlgCoInterface coroutine; // Coroutine interface for the algorithm
+   };
+
+   /**
+    * @brief Structure holding all the algos and data for one the processing of one event.
+    */
+   struct NewEventSlot {
+      /**
+       * @brief Event number for the slot.
+       */
+      int eventNumber = -1;
+
+      /**
+       * @brief Mutex to ensure that only one thread schedules the algorithms in the slot.
+       */
+      std::mutex schedulingMutex;
+
+      /**
+       * @brief Algorithms in the slot, each with its own coroutine interface and mutex.
+       */
+      std::vector<NewAlgoSlot> algorithms; // Algorithms in the slot, each with its own coroutine interface and mutex
+
+      /**
+       * @brief Event content manager for the slot, managing data objects and dependencies.
+       */
+      EventContentManager eventManager;
+
+      /**
+       * @brief CUDA stream for the slot
+       */
+      cudaStream_t stream = nullptr;
+      // Add product manager ?
+      // TODO: Add helper functions
+   };
+
+   struct NewEventSlotArray {
+      std::vector<NewEventSlot> slots; // Slots for the event, each with its own algorithms and content manager
+   };
+
+   struct NewRunQueue {
+      struct ActionRequest {
+        enum class ActionType {
+          Start,  // Request to start the slot
+          Resume  // Request to resume the worker thread
+        };
+        int slot = 0; // Slot index
+        std::size_t alg = 0; // Algorithm index
+        bool exit = false; // Exit flag for the worked thread
+      };
+      tbb::concurrent_queue<NewEventSlotArray> queue; // Queue of event slots, each with its own algorithms and content manager
+   };
+
+   std::vector<std::reference_wrapper<AlgorithmBase>> algorithms; // List of algorithms registered in the scheduler
+   int maxConcurrentEvents = 0; // Maximum number of concurrent events
+   std::vector<NewEventSlotArray> eventSlots; // Array of event slots, each with its own algorithms and content manager
+   std::atomic_int nextEvent = 0; // Next event to process
+   std::atomic_int remainingEvents = 0; // Remaining events to process
+   NewRunQueue runQueue; // Run queue for the scheduler
+   
+   std::vector<std::thread> workerThreads; // Worker threads for processing the slots
+
+   /**
+    * @brief Adds an algorithm to the algorithm list. This function should be called before running.
+    */
+   void addAlgorithm(AlgorithmBase& alg) {
+      if (m_runStarted) {
+         throw std::logic_error("Cannot add algorithm after scheduler has started running");
+      }
+      algorithms.push_back(alg);
+   }
+
 };

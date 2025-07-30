@@ -17,3 +17,7 @@ target_link_libraries(TestTBBTaskSuspension PUBLIC TBB::tbb CUDA::cudart)
 add_executable(CUDAGraphTest CUDAGraphs.cu)
 target_link_libraries(CUDAGraphTest PRIVATE CUDA::cudart TBB::tbb) 
 add_test(NAME CUDAGraphTest COMMAND CUDAGraphTest)
+
+add_executable(TestNewScheduler TestNewScheduler.cpp)
+target_link_libraries(TestNewScheduler PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+add_test(NAME TestNewScheduler COMMAND TestNewScheduler)

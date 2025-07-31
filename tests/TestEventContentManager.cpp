@@ -67,11 +67,11 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     // E -> B
     // So the execution order is: A -> C -> D -> E -> B
     std::vector<std::reference_wrapper<AlgorithmBase>> algs{algA, algB, algC, algD, algE};
-    EventContentManager m{algs};
+    EventContentManager ecm{algs};
 
     // Helper lambda to check expected ready dependants, with file/line
     auto expect_ready = [&](int idx, std::vector<size_t> expected, const char* file, int line) {
-        auto v = m.getDependantAndReadyAlgs(idx);
+        auto v = ecm.getDependantAndReadyAlgs(idx);
         std::sort(v.begin(), v.end());
         std::sort(expected.begin(), expected.end());
         std::ostringstream oss;
@@ -84,11 +84,11 @@ TEST(EventContentManagerTest, MultipleDependencies) {
 #define EXPECT_READY(idx, expected) expect_ready(idx, expected, __FILE__, __LINE__)
 
     // At start, only A is ready (no dependencies)
-    ASSERT_TRUE(m.isAlgExecutable(AlgAIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgCIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgDIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgEIdx));
+    ASSERT_TRUE(ecm.isAlgExecutable(AlgAIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgBIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgCIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgDIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgEIdx));
     EXPECT_READY(AlgAIdx, {});
     EXPECT_READY(AlgBIdx, {});
     EXPECT_READY(AlgCIdx, {});
@@ -96,12 +96,12 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     EXPECT_READY(AlgEIdx, {});
 
     // Execute A
-    ASSERT_TRUE(m.setAlgExecuted(AlgAIdx));
+    ASSERT_TRUE(ecm.setAlgExecuted(AlgAIdx));
     // After A: C is ready, B and E still blocked
-    ASSERT_TRUE(m.isAlgExecutable(AlgCIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgDIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgEIdx));
+    ASSERT_TRUE(ecm.isAlgExecutable(AlgCIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgBIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgDIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgEIdx));
     EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgCIdx})); // A's dependants: C (B not yet ready)
     EXPECT_READY(AlgBIdx, {});
     EXPECT_READY(AlgCIdx, {});
@@ -109,11 +109,11 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     EXPECT_READY(AlgEIdx, {});
 
     // Execute C
-    ASSERT_TRUE(m.setAlgExecuted(AlgCIdx));
+    ASSERT_TRUE(ecm.setAlgExecuted(AlgCIdx));
     // After C: D is ready, E still blocked, B still blocked
-    ASSERT_TRUE(m.isAlgExecutable(AlgDIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgEIdx));
+    ASSERT_TRUE(ecm.isAlgExecutable(AlgDIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgBIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgEIdx));
     EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgCIdx}));
     EXPECT_READY(AlgBIdx, {});
     EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx})); // C's dependants: D (E not yet ready)
@@ -121,10 +121,10 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     EXPECT_READY(AlgEIdx, {});
 
     // Execute D
-    ASSERT_TRUE(m.setAlgExecuted(AlgDIdx));
+    ASSERT_TRUE(ecm.setAlgExecuted(AlgDIdx));
     // After D: E is ready, B still blocked
-    ASSERT_TRUE(m.isAlgExecutable(AlgEIdx));
-    ASSERT_FALSE(m.isAlgExecutable(AlgBIdx));
+    ASSERT_TRUE(ecm.isAlgExecutable(AlgEIdx));
+    ASSERT_FALSE(ecm.isAlgExecutable(AlgBIdx));
     EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgCIdx}));
     EXPECT_READY(AlgBIdx, {});
     EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx, AlgEIdx})); // C's dependants: D, E (now E is ready)
@@ -132,9 +132,9 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     EXPECT_READY(AlgEIdx, {});
 
     // Execute E
-    ASSERT_TRUE(m.setAlgExecuted(AlgEIdx));
+    ASSERT_TRUE(ecm.setAlgExecuted(AlgEIdx));
     // After E: B is ready
-    ASSERT_TRUE(m.isAlgExecutable(AlgBIdx));
+    ASSERT_TRUE(ecm.isAlgExecutable(AlgBIdx));
     EXPECT_READY(AlgAIdx, (std::vector<size_t>{AlgBIdx, AlgCIdx})); // A's dependants: B, C (B is now ready)
     EXPECT_READY(AlgBIdx, {});
     EXPECT_READY(AlgCIdx, (std::vector<size_t>{AlgDIdx, AlgEIdx}));
@@ -142,10 +142,10 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     EXPECT_READY(AlgEIdx, (std::vector<size_t>{AlgBIdx})); // E's dependant: B
 
     // Execute B
-    ASSERT_TRUE(m.setAlgExecuted(AlgBIdx));
+    ASSERT_TRUE(ecm.setAlgExecuted(AlgBIdx));
     // All done, all should be ready
     for (int i = 0; i < 5; ++i) {
-        ASSERT_TRUE(m.isAlgExecutable(i));
+        ASSERT_TRUE(ecm.isAlgExecutable(i));
     }
 
     // No changes after all executed

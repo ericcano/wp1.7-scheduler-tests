@@ -8,7 +8,7 @@
 #include <tbb/concurrent_queue.h>
 #include <cuda_runtime_api.h>
 #include "AlgorithmBase.hpp"
-#include "EventContentManager.hpp"
+#include "NewAlgoDependencyMap.hpp"
 
 namespace WP17NewScheduler {
    /**
@@ -58,7 +58,7 @@ public:
    /**
     * @brief Destructor just cleans up the CUDA streams.
     */
-   ~NewScheduler();
+   ~NewScheduler() {}
 
    /** 
     * @brief Adds an algorithm to the algorithm list. This function should be called before running. 
@@ -115,7 +115,7 @@ public:
       /**
        * @brief Event content manager for the slot, managing data objects and dependencies.
        */
-      EventContentManager eventManager;
+      NewEventContentManager eventContentManager;
 
       /**
        * @brief CUDA stream for the slot
@@ -150,10 +150,10 @@ public:
 private:
 
    /// @brief Number of threads to use.
-   int m_threads;
+   int m_threadsNumber;
 
    /// @brief Number of slots to use (i.e. concurrent events being processed).
-   int m_slots;
+   int m_eventSlotsNumber;
 
    /// @brief Id of the next event to process.
    int m_nextEvent = 0;
@@ -170,8 +170,11 @@ private:
    /// @brief List of algorithms retistered in the scheduler.
    std::vector<std::reference_wrapper<AlgorithmBase>> m_algorithms;
 
-  //  /// @brief Vector tracking each slot's state
-  //  std::vector<SlotState> m_slotStates;
+   /// @brief The event content manager
+   NewAlgoDependencyMap m_algoDependencyMap;
+
+   /// @brief Vector tracking each slot's state
+   std::vector<NewEventSlot> m_eventSlots;
 
   //  /// @brief CUDA streams for each slot, in a one-to-one relationship.
   //  /// @todo It should simply be a member of SlotState.

@@ -5,6 +5,7 @@
 #include <atomic>
 #include <functional>
 #include <stdexcept>
+#include <ranges>
 #include <tbb/concurrent_queue.h>
 #include <cuda_runtime_api.h>
 #include "AlgorithmBase.hpp"
@@ -97,6 +98,23 @@ public:
     * @brief Structure holding all the algos and data for one the processing of one event.
     */
    struct NewEventSlot {
+
+      NewEventSlot() = default;
+      NewEventSlot(const NewEventSlot&) = delete;
+      NewEventSlot& operator=(const NewEventSlot&) = delete;
+      NewEventSlot(NewEventSlot&&) = delete;
+      NewEventSlot& operator=(NewEventSlot&&) = delete;
+      /**
+       * @brief Initializer of event content manager.
+       */
+      void initialize(const NewAlgoDependencyMap& depMap) {
+         eventContentManager.resize(depMap);
+         for (auto aidx: std::ranges::iota_view(std::size_t(0), depMap.algorithmsCount())) {
+            std::ignore = algorithms[aidx];
+         }
+         //algorithms.resize(depMap.algorithmsCount());
+      }
+
       /**
        * @brief Event number for the slot.
        */
@@ -126,13 +144,6 @@ public:
    };
 
    /**
-    * @brief Array of event slots, each with its own algorithms and content manager
-    */
-   struct NewEventSlotArray {
-      std::vector<NewEventSlot> slots; // Slots for the event, each with its own algorithms and content manager
-   };
-
-   /**
     * @brief Run queue for the scheduler
     */
    struct NewRunQueue {
@@ -145,7 +156,7 @@ public:
         std::size_t alg = 0; ///< Algorithm index
         bool exit = false; ///< Exit flag for the worked thread
       };
-      tbb::concurrent_queue<NewEventSlotArray> queue; // Queue of event slots, each with its own algorithms and content manager
+      tbb::concurrent_queue<ActionRequest> queue; // Queue of action requests
    };
 private:
 

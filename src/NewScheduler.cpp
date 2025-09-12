@@ -1,6 +1,7 @@
 #include "NewScheduler.hpp"
 #include "AssertCuda.cuh"
 #include <exception>
+#include <ranges>
 
 NewScheduler::NewScheduler(int threads, int slots, ExecutionStrategy executionStrategy)
     : m_threadsNumber{threads},
@@ -29,16 +30,24 @@ void NewScheduler::initSchedulerState()  {
   // Then, create the event slots. The event slots are assigned an event number
   // in all cases, even if the event is above target and the slot will be active.
   // It will possibly be in subsequent runs.
-  m_eventSlots.resize(m_eventSlotsNumber);
-  for (auto & slot : m_eventSlots) {
-    slot.eventNumber = m_nextEvent++;
-    new (&slot.eventContentManager) NewEventContentManager(m_algoDependencyMap);
+  // NewEventSlot is not movable or copyable so we do a placement new instead of resize.
+  new (&m_eventSlots) std::vector<NewEventSlot>(m_eventSlotsNumber);
+  for (auto i: std::ranges::iota_view(0, m_eventSlotsNumber)) {
+     std::ignore = i; // Avoid unused variable warning
+     for (auto slotId: std::views::iota(0, m_eventSlotsNumber)) {
+        m_eventSlots[slotId].initialize(m_algoDependencyMap);
+     }
+     //m_eventSlots[i].eventContentManager.dumpContents(m_algoDependencyMap, std::cout);
+   }
+  // for (auto & slot : m_eventSlots) {
+  //   slot.eventNumber = m_nextEvent++;
+  //   new (&slot.eventContentManager) NewEventContentManager(m_algoDependencyMap);
 
-    // Create a CUDA stream for the slot
-    ASSERT_CUDA(cudaStreamCreate(&slot.stream));
-    // Initialize algorithms in the slot
-    slot.algorithms.resize(m_algorithms.size());
-  }
+  //   // Create a CUDA stream for the slot
+  //   ASSERT_CUDA(cudaStreamCreate(&slot.stream));
+  //   // Initialize algorithms in the slot
+  //   slot.algorithms.resize(m_algorithms.size());
+  // }
   // Initialize the run queue
 
   // Event slot need a reference to the event content manager

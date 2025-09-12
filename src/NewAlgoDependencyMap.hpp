@@ -40,6 +40,13 @@ public:
    NewAlgoDependencyMap(const NewAlgoDependencyMap& E) = delete;
    NewAlgoDependencyMap& operator=(const NewAlgoDependencyMap& E) = delete;
 
+   std::size_t algorithmsCount() const {
+      return m_algDependencies.size();
+   }
+   std::size_t productsCount() const {
+      return m_algDependencies[0].size();
+   }
+
 private:
    /// Type used for bitset.
    class DataObjColl_t: public boost::dynamic_bitset<> {
@@ -66,12 +73,15 @@ private:
 class NewEventContentManager {
 public:
 
+   NewEventContentManager() = default;
+
     /**
       * @brief Default constructor, only used at initialization of the scheduler slot.
       */
-   NewEventContentManager(const NewAlgoDependencyMap& depMap) {
+   void resize(const NewAlgoDependencyMap& depMap) {
+      m_algContent.clear();
       m_algContent.resize(depMap.m_algDependencies[0].size());
-       }
+    }
 
    NewEventContentManager(const NewEventContentManager& E) = delete;
    NewEventContentManager& operator=(const NewEventContentManager& E) = delete;

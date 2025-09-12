@@ -92,6 +92,11 @@ NewAlgoDependencyMap::NewAlgoDependencyMap(
    }
 }
 
+bool NewAlgoDependencyMap::isAlgIndependent(std::size_t algIdx) const {
+   assert(algIdx < m_algDependencies.size());
+   return m_algDependencies[algIdx].none();
+}
+
 StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg, 
     const NewAlgoDependencyMap & depMap) {
    assert(alg < depMap.m_algDependencies.size());

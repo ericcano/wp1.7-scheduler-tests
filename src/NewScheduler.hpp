@@ -44,6 +44,13 @@ public:
         CachedGraphsDelegated
     };
 
+   // Struct to hold run statistics
+   struct RunStats {
+      int events = 0;
+      double rate = 0.0;      // events/sec
+      long long duration = 0; // milliseconds
+   };
+
    /**
     * @brief NewScheduler constructor
     * @param threads number of threads
@@ -72,6 +79,17 @@ private:
     * @brief Assigns in initial event ids to each `slot` and creates the CUDA streams.
     */
    void initSchedulerState();
+
+public:
+   /**
+    * @brief Starts the processing of events.
+    * @param eventsToProcess Number of events to process.
+    * @param stats RunStats structure to hold run statistics.
+    * @return StatusCode indicating success or failure.
+    * @throw RuntimeError if the scheduler is misconfigured or if an error occurs during processing.
+    * @note This function is re-runnable, and implicity calls `initSchedulerState()` on first run.
+    */
+   StatusCode run(int eventsToProcess, RunStats& stats);
 
 public:
 
@@ -107,12 +125,13 @@ public:
       /**
        * @brief Initializer of event content manager.
        */
-      void initialize(const NewAlgoDependencyMap& depMap) {
+      void initialize(const NewAlgoDependencyMap& depMap, int eId) {
          eventContentManager.resize(depMap);
          for (auto aidx: std::ranges::iota_view(std::size_t(0), depMap.algorithmsCount())) {
             std::ignore = algorithms[aidx];
          }
-         //algorithms.resize(depMap.algorithmsCount());
+         new (& algorithms) std::vector<NewAlgoSlot>(depMap.algorithmsCount());
+         eventNumber = eId;
       }
 
       /**
@@ -151,7 +170,7 @@ public:
         enum class ActionType {
           Start,  ///< Request to start the slot
           Resume  ///< Request to resume the worker thread
-        };
+        } type; ///< Type of action
         int slot = 0; ///< Slot index
         std::size_t alg = 0; ///< Algorithm index
         bool exit = false; ///< Exit flag for the worked thread
@@ -167,7 +186,7 @@ private:
    int m_eventSlotsNumber;
 
    /// @brief Id of the next event to process.
-   int m_nextEvent = 0;
+   std::atomic_int m_nextEventId = 0;
 
    /// @brief Flag controling the switchover from configuring (registering algorithms) to running.
    bool m_runStarted = false;

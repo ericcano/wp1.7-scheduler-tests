@@ -1,13 +1,11 @@
 #pragma once
 
-
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <mutex>
 #include <vector>
-
 
 // Forward declarations.
 class AlgorithmBase;
@@ -46,6 +44,8 @@ public:
    std::size_t productsCount() const {
       return m_algDependencies[0].size();
    }
+
+   bool isAlgIndependent(std::size_t algIdx) const;
 
 private:
    /// Type used for bitset.

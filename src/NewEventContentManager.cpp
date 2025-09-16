@@ -164,11 +164,11 @@ std::vector<std::size_t> NewEventContentManager::getDependentAndReadyAlgs(std::s
    return readyAlgs;
 }
 
-// bool NewEventContentManager::isAlgExecutable(std::size_t algIdx) const {
-//    assert(algIdx < m_algDependencies.size());
-//    std::lock_guard<std::mutex> guard(m_storeContentMutex);
-//    return m_algDependencies[algIdx].is_subset_of(m_algContent);
-// }
+bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, 
+    const NewAlgoDependencyMap& depMap) const {
+   assert(algIdx < depMap.m_algDependencies.size());
+   return depMap.m_algDependencies[algIdx].is_subset_of(m_algContent);
+}
 
 
 void NewEventContentManager::reset() {

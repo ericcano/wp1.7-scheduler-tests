@@ -7,7 +7,6 @@ NewScheduler::NewScheduler(int threads, int slots, ExecutionStrategy executionSt
     : m_threadsNumber{threads},
       m_eventSlotsNumber{slots},
       m_nextEventId{},
-      m_remainingEvents{},
       m_executionStrategy(executionStrategy) {}
 
 
@@ -22,7 +21,8 @@ void NewScheduler::addAlgorithm(NewAlgorithmBase& alg) {
 void NewScheduler::initSchedulerState()  {
   // Ge all to initial state
   m_nextEventId = 0;
-  m_remainingEvents = 0;
+  m_remainingEventsToSchedule = 0;
+  m_remainingEventsToComplete = 0;
   m_eventSlots.clear();
   // First, populate the algorithm dependency map with the algorithms.
   new(&m_algoDependencyMap) NewAlgoDependencyMap(m_algorithms);
@@ -45,7 +45,8 @@ StatusCode NewScheduler::run(int eventsToProcess, RunStats& stats) {
     initSchedulerState();
     m_runStarted = true;
   }
-  m_remainingEvents.store(eventsToProcess);
+  m_remainingEventsToSchedule.store(eventsToProcess);
+  m_remainingEventsToComplete.store(eventsToProcess);
   m_targetEventId += eventsToProcess;
   auto startTime = std::chrono::high_resolution_clock::now();
   // Populate the run queue with requests for each runnable algorithm in each slot.
@@ -84,41 +85,33 @@ void NewScheduler::populateRunQueue() {
   }
 }
 
-// void NewScheduler::scheduleNextEventInSlot(NewEventSlot& slot) {
-//   //TODO
-//   // Update slot event number in all cases.
-//   slot.eventNumber = m_nextEventId++;
-//   if (slot.eventNumber >= m_targetEventId) {
-//     // We do not need to schedule this event. In addition, if we finished processing
-//     // all events, we need to queue exit requests for the worker threads.
-//     if (m_remainingEvents.fetch_sub(1) == 1)
-//       return; // No more events to schedule in this slot.
-//   }
-//   // Move to the next event.
-//   slot.eventNumber = m_nextEventId++;
-//   if (slot.eventNumber < m_targetEventId) {
-//     // Reset the event content manager for the new event.
-//     slot.eventContentManager.resize(m_algoDependencyMap);
-//     // Queue start requests for all independent algorithms.
-//     for (auto& alg: slot.algorithms) {
-//       std::size_t algId = &alg - &slot.algorithms[0];
-//       if(m_algoDependencyMap.isAlgIndependent(algId)) {
-//         int sId = &slot - &m_eventSlots[0];
-//         NewRunQueue::ActionRequest req{NewRunQueue::ActionRequest::ActionType::Start, sId, algId, false};
-//         m_runQueue.queue.push(req);
-//       }
-//     }
-//   } else {
-//     // No more events to schedule. If this was the last event, queue exit requests for the worker threads.
-//     if (m_remainingEvents.fetch_sub(1) == 1) {
-//       for (int i = 0; i < m_threadsNumber - 1; ++i) {
-//         NewRunQueue::ActionRequest exitReq{NewRunQueue::ActionRequest::ActionType::Exit, -1,
-//           std::numeric_limits<std::size_t>::max(), true};
-//         m_runQueue.queue.push(exitReq);
-//       }
-//     }
-//   }
-// }
+void NewScheduler::scheduleNextEventInSlot(NewEventSlot& slot) {
+  // Update slot event number in all cases.
+  slot.eventNumber = m_nextEventId++;
+  // Did we reach the target event number?
+  if (slot.eventNumber >= m_targetEventId) {
+    // We do not need to schedule this event. In addition, if we finished processing
+    // all events, we need to queue exit requests for the worker threads.
+    if (m_remainingEventsToComplete.fetch_sub(1) == 1) {
+      for (int i = 0; i < m_threadsNumber - 1; ++i) {
+        NewRunQueue::ActionRequest exitReq{NewRunQueue::ActionRequest::ActionType::Exit, -1,
+          std::numeric_limits<std::size_t>::max(), true};
+        m_runQueue.queue.push(exitReq);
+      }
+    }
+    return; // No more events to schedule in this slot.
+  }
+  // We will schedule this event's first algos.
+  for (auto& alg: slot.algorithms) {
+    std::size_t algId = &alg - &slot.algorithms[0];
+    if(m_algoDependencyMap.isAlgIndependent(algId)) {
+      
+      int sId = &slot - &m_eventSlots[0];
+      NewRunQueue::ActionRequest req{NewRunQueue::ActionRequest::ActionType::Start, sId, algId, false};
+      m_runQueue.queue.push(req);
+    }
+  }
+}
 
 void NewScheduler::startWorkerThreads() {
   // Start worker threads if not already started.

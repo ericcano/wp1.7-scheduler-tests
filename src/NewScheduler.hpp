@@ -234,9 +234,12 @@ private:
    int m_targetEventId = 0;
 
    /// @brief Number of events remaining to be processed.
-   std::atomic_int m_remainingEvents;
+   std::atomic_int m_remainingEventsToSchedule = 0;
 
-   /// @brief List of algorithms retistered in the scheduler.
+   /// @brief Number of events remaining to be fully processed.
+   std::atomic_int m_remainingEventsToComplete = 0;
+
+   /// @brief List of algorithms registered in the scheduler.
    std::vector<std::reference_wrapper<NewAlgorithmBase>> m_algorithms;
 
    /// @brief The event content manager

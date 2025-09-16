@@ -97,88 +97,69 @@ bool NewAlgoDependencyMap::isAlgIndependent(std::size_t algIdx) const {
    return m_algDependencies[algIdx].none();
 }
 
-StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg, 
-    const NewAlgoDependencyMap & depMap) {
-   assert(alg < depMap.m_algDependencies.size());
-   m_algContent |= depMap.m_algProducts[alg];
-   return StatusCode::SUCCESS;
-}
-
-std::vector<std::size_t> NewAlgoDependencyMap::getDependentAndReadyAlgs(std::size_t algIdx, 
-  const NewAlgoDependencyMap & depMap) const {
-   assert(algIdx < depMap.m_algDependents.size());
-   std::vector<std::size_t> readyAlgs;
-
-   auto &deps = depMap.m_algDependents[algIdx];
-   std::size_t i = deps.find_first();
-   while (i != boost::dynamic_bitset<>::npos) {
-      if (depMap.m_algDependencies[i].is_subset_of(m_algContent)) {
-         readyAlgs.push_back(i);
-      }
-      i = deps.find_next(i);
-   }
-   return readyAlgs;
-}
-
-bool NewEventContentManager::isEventComplete() const {
-   for (std::size_t alg = 0; alg < m_algContent.size(); ++alg) {
-      if (!m_algContent.test(alg)) return false;
-   }
-   return true;
-}
 
 
-bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, const NewAlgoDependencyMap& depMap) const {
-   assert(algIdx < depMap.m_algDependencies.size());
-   return depMap.m_algDependencies[algIdx].is_subset_of(m_algContent);
-}
 
 
-void NewEventContentManager::reset() {
-   m_algContent.reset();
-}
+// bool NewEventContentManager::isEventComplete() const {
+//    for (std::size_t alg = 0; alg < m_algContent.size(); ++alg) {
+//       if (!m_algContent.test(alg)) return false;
+//    }
+//    return true;
+// }
 
-void NewEventContentManager::dumpContents(const NewAlgoDependencyMap& depMap, std::ostream& os) const {
-    os << "NewEventContentManager dump:\n";
-    os << "Dependencies per algorithm:\n";
-    for (size_t i = 0; i < depMap.m_algDependencies.size(); ++i) {
-        os << "  Alg " << i << ": ";
-        bool first = true;
-        for (size_t j = depMap.m_algDependencies[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algDependencies[i].find_next(j)) {
-            if (!first) os << ", ";
-            os << j;
-            first = false;
-        }
-        os << "\n";
-    }
-    os << "Products per algorithm:\n";
-    for (size_t i = 0; i < depMap.m_algProducts.size(); ++i) {
-        os << "  Alg " << i << ": ";
-        bool first = true;
-        for (size_t j = depMap.m_algProducts[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algProducts[i].find_next(j)) {
-            if (!first) os << ", ";
-            os << j;
-            first = false;
-        }
-        os << "\n";
-    }
-    os << "Dependants per algorithm:\n";
-    for (size_t i = 0; i < depMap.m_algDependents.size(); ++i) {
-        os << "  Alg " << i << ": ";
-        bool first = true;
-        for (size_t j = depMap.m_algDependents[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algDependents[i].find_next(j)) {
-            if (!first) os << ", ";
-            os << j;
-            first = false;
-        }
-        os << "\n";
-    }
-    os << "Current event content bitset:\n  ";
-    bool first = true;
-    for (size_t j = m_algContent.find_first(); j != boost::dynamic_bitset<>::npos; j = m_algContent.find_next(j)) {
-        if (!first) os << ", ";
-        os << j;
-        first = false;
-    }
-    os << "\n";
-}
+
+// bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, const NewAlgoDependencyMap& depMap) const {
+//    assert(algIdx < depMap.m_algDependencies.size());
+//    return depMap.m_algDependencies[algIdx].is_subset_of(m_algContent);
+// }
+
+
+// void NewEventContentManager::reset() {
+//    m_algContent.reset();
+// }
+
+// void NewEventContentManager::dumpContents(const NewAlgoDependencyMap& depMap, std::ostream& os) const {
+//     os << "NewEventContentManager dump:\n";
+//     os << "Dependencies per algorithm:\n";
+//     for (size_t i = 0; i < depMap.m_algDependencies.size(); ++i) {
+//         os << "  Alg " << i << ": ";
+//         bool first = true;
+//         for (size_t j = depMap.m_algDependencies[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algDependencies[i].find_next(j)) {
+//             if (!first) os << ", ";
+//             os << j;
+//             first = false;
+//         }
+//         os << "\n";
+//     }
+//     os << "Products per algorithm:\n";
+//     for (size_t i = 0; i < depMap.m_algProducts.size(); ++i) {
+//         os << "  Alg " << i << ": ";
+//         bool first = true;
+//         for (size_t j = depMap.m_algProducts[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algProducts[i].find_next(j)) {
+//             if (!first) os << ", ";
+//             os << j;
+//             first = false;
+//         }
+//         os << "\n";
+//     }
+//     os << "Dependants per algorithm:\n";
+//     for (size_t i = 0; i < depMap.m_algDependents.size(); ++i) {
+//         os << "  Alg " << i << ": ";
+//         bool first = true;
+//         for (size_t j = depMap.m_algDependents[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algDependents[i].find_next(j)) {
+//             if (!first) os << ", ";
+//             os << j;
+//             first = false;
+//         }
+//         os << "\n";
+//     }
+//     os << "Current event content bitset:\n  ";
+//     bool first = true;
+//     for (size_t j = m_algContent.find_first(); j != boost::dynamic_bitset<>::npos; j = m_algContent.find_next(j)) {
+//         if (!first) os << ", ";
+//         os << j;
+//         first = false;
+//     }
+//     os << "\n";
+// }

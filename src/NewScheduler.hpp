@@ -170,11 +170,12 @@ public:
       struct ActionRequest {
         enum class ActionType {
           Start,  ///< Request to start the slot
-          Resume  ///< Request to resume the worker thread
+          Resume,  ///< Request to resume the worker thread
+          Exit     ///< No action, used to signal thread exit
         } type; ///< Type of action
         int slot = 0; ///< Slot index
         std::size_t alg = 0; ///< Algorithm index
-        bool exit = false; ///< Exit flag for the worked thread
+        bool exit = false; ///< Exit flag for the worked thread TODO: duplicate with ActionType::Exit
       };
       tbb::concurrent_queue<ActionRequest> queue; // Queue of action requests
    };

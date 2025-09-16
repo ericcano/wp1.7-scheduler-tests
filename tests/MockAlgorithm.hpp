@@ -19,7 +19,7 @@ public:
         }
     }
     StatusCode initialize() override { return StatusCode::SUCCESS; }
-    AlgCoInterface execute() const override { return {}; }
+    AlgCoInterface execute(NewAlgoContext& ctx) const override { return {}; }
     StatusCode finalize() override { return StatusCode::SUCCESS; }
 };
 
@@ -37,7 +37,7 @@ public:
         }
     }
     StatusCode initialize() override { return StatusCode::SUCCESS; }
-    AlgCoInterface execute() const override { return {}; }
+    AlgCoInterface execute(NewAlgoContext& ctx) const override { return {}; }
     StatusCode finalize() override { return StatusCode::SUCCESS; }
     // TODO: add event store interface.
 };

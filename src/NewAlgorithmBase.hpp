@@ -9,6 +9,7 @@
 
 #include "Coroutines.hpp"
 #include "StatusCode.hpp"
+#include "NewAlgoContext.hpp"
 
 /**
  * @brief Base class for algorithms. Algorithms express dependencies on products
@@ -26,14 +27,14 @@ public:
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface execute() const = 0;
+   virtual AlgCoInterface execute(NewAlgoContext& ctx) const = 0;
 
    /**
     * @brief Execute the algorithm with all kernels launched without delay and just a final synchronization.
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeStraight() const;
+   virtual AlgCoInterface executeStraight(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm with all kernels launched without delay and just a final synchronization in a task
@@ -42,7 +43,7 @@ public:
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeStraightDelegated() const;
+   virtual AlgCoInterface executeStraightDelegated(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm with all kernels launched without delay and just a final synchronization in a task
@@ -50,7 +51,7 @@ public:
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeStraightMutexed() const;
+   virtual AlgCoInterface executeStraightMutexed(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm with all kernels launched without delay and just a final synchronization in a task
@@ -59,7 +60,7 @@ public:
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeStraightThreadLocalStreams() const;
+   virtual AlgCoInterface executeStraightThreadLocalStreams(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm with all kernels launched without delay and just a final synchronization in a task
@@ -67,35 +68,35 @@ public:
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeStraightThreadLocalContext() const;
+   virtual AlgCoInterface executeStraightThreadLocalContext(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm as a CUDA graph with just a final synchronization.
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeGraph() const;
+   virtual AlgCoInterface executeGraph(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm as a CUDA graph with graph customization and launch in a single thread.
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeGraphFullyDelegated() const;
+   virtual AlgCoInterface executeGraphFullyDelegated(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm as a CUDA graph with cached graphs to minimize contention.
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeCachedGraph() const;
+   virtual AlgCoInterface executeCachedGraph(NewAlgoContext& ctx) const;
 
    /**
     * @brief Execute the algorithm as a CUDA graph with cached graphs to minimize contention. CUDA calls are delegated to a single thread.
     * @param ctx The event context.
     * @return A coroutine interface for the execution.
     */
-   virtual AlgCoInterface executeCachedGraphDelegated() const;
+   virtual AlgCoInterface executeCachedGraphDelegated(NewAlgoContext& ctx) const;
 
    virtual StatusCode finalize() = 0;
 

@@ -163,37 +163,45 @@ void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
   // If the coroutine is not yet created, create it.
   if (algSlot.coroutine.empty()) {
     auto & alg = m_algorithms[req.alg].get();
+    NewAlgoContext ctx{
+      .eventNumber = slot.eventNumber,
+      .slotNumber = req.slot,
+      .algorithmNumber = req.alg,
+      .scheduler = *this,
+      .eventStore = slot.eventStore,
+      .stream = slot.stream
+    };
     switch (m_executionStrategy)
     {
       case ExecutionStrategy::SingleLaunch:
-          algSlot.coroutine = alg.execute();
+          algSlot.coroutine = alg.execute(ctx);
           break;
       case ExecutionStrategy::StraightLaunches:
-          algSlot.coroutine = alg.executeStraight();
+          algSlot.coroutine = alg.executeStraight(ctx);
           break;
       case ExecutionStrategy::StraightDelegated:
-          algSlot.coroutine = alg.executeStraightDelegated();
+          algSlot.coroutine = alg.executeStraightDelegated(ctx);
           break;
       case ExecutionStrategy::StraightMutexed:
-          algSlot.coroutine = alg.executeStraightMutexed();
+          algSlot.coroutine = alg.executeStraightMutexed(ctx);
           break;
       case ExecutionStrategy::StraightThreadLocalStreams:
-          algSlot.coroutine = alg.executeStraightThreadLocalStreams();
+          algSlot.coroutine = alg.executeStraightThreadLocalStreams(ctx);
           break;
       case ExecutionStrategy::StraightThreadLocalContext:
-          algSlot.coroutine = alg.executeStraightThreadLocalContext();
+          algSlot.coroutine = alg.executeStraightThreadLocalContext(ctx);
           break;
       case ExecutionStrategy::Graph:
-          algSlot.coroutine = alg.executeGraph();
+          algSlot.coroutine = alg.executeGraph(ctx);
           break;
       case ExecutionStrategy::GraphFullyDelegated:
-          algSlot.coroutine = alg.executeGraphFullyDelegated();
+          algSlot.coroutine = alg.executeGraphFullyDelegated(ctx);
           break;
       case ExecutionStrategy::CachedGraphs:
-          algSlot.coroutine = alg.executeCachedGraph();
+          algSlot.coroutine = alg.executeCachedGraph(ctx);
           break;
       case ExecutionStrategy::CachedGraphsDelegated:
-          algSlot.coroutine = alg.executeCachedGraphDelegated();
+          algSlot.coroutine = alg.executeCachedGraphDelegated(ctx);
           break;
       default:
           std::cerr << "In Scheduler::pushAction(): Unknown execution strategy:" << to_string(m_executionStrategy) << std::endl;

@@ -1,8 +1,8 @@
 #include "NewAlgorithmBase.hpp"
 #include "EventContext.hpp"
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraight() const {
-  auto exec = execute();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraight(NewAlgoContext& ctx) const {
+  auto exec = execute(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -10,8 +10,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraight() const {
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightDelegated() const {
-  auto exec = execute();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightDelegated(NewAlgoContext& ctx) const {
+  auto exec = execute(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -19,8 +19,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightDelegated() co
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightMutexed() const {
-  auto exec = execute();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightMutexed(NewAlgoContext& ctx) const {
+  auto exec = execute(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -28,8 +28,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightMutexed() cons
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalStreams() const {
-  auto exec = execute();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalStreams(NewAlgoContext& ctx) const {
+  auto exec = execute(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -37,8 +37,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalStr
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalContext() const {
-  auto exec = execute();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalContext(NewAlgoContext& ctx) const {
+  auto exec = execute(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -46,8 +46,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalCon
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraph() const {
-  auto exec = execute();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraph(NewAlgoContext& ctx) const {
+  auto exec = execute(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -55,8 +55,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraph() const {
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraphFullyDelegated() const {
-  auto exec = executeGraph();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraphFullyDelegated(NewAlgoContext& ctx) const {
+  auto exec = executeGraph(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -64,8 +64,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraphFullyDelegated() 
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraph() const {
-  auto exec = executeGraph();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraph(NewAlgoContext& ctx) const {
+  auto exec = executeGraph(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();
@@ -73,8 +73,8 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraph() const {
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraphDelegated() const {
-  auto exec = executeCachedGraph();
+NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraphDelegated(NewAlgoContext& ctx) const {
+  auto exec = executeCachedGraph(ctx);
   while (exec.resume()) {
     // Process the coroutine execution
     co_yield exec.getYield();

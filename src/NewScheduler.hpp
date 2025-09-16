@@ -10,6 +10,8 @@
 #include <cuda_runtime_api.h>
 #include "NewAlgorithmBase.hpp"
 #include "NewEventContentManager.hpp"
+#include "EventStore.hpp"
+
 
 namespace WP17NewScheduler {
    /**
@@ -26,10 +28,13 @@ namespace WP17NewScheduler {
 
 #define DEFINE_EXCEPTION(name) class name: public WP17NewScheduler::Exception { using WP17NewScheduler::Exception::Exception; }
 
+class NewAlgoContext;
+
 /**
  * @brief A progressive build of the scheduler replacement.
  */
 struct NewScheduler {
+   friend class NewAlgoContext;
 public:
     enum class ExecutionStrategy {
         SingleLaunch,
@@ -154,6 +159,11 @@ public:
        * @brief Event content manager for the slot, managing data objects and dependencies.
        */
       NewEventContentManager eventContentManager;
+
+      /**
+       * @brief Event store for the slot, storing data products and event information.
+       */
+      EventStore eventStore;
 
       /**
        * @brief CUDA stream for the slot

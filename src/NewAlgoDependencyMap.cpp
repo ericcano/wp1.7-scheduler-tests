@@ -6,7 +6,7 @@
 #include <ostream>
 #include <set>
 
-#include "AlgorithmBase.hpp"
+#include "NewAlgorithmBase.hpp"
 #include "StatusCode.hpp"
 
 
@@ -31,9 +31,9 @@ void NewAlgoDependencyMap::DataObjColl_t::setBits(const std::vector<std::string>
 
 
 NewAlgoDependencyMap::NewAlgoDependencyMap(
-    const std::vector<std::reference_wrapper<AlgorithmBase>>& algs)
+    const std::vector<std::reference_wrapper<NewAlgorithmBase>>& algs)
     : m_algDependencies(algs.size()),
-      m_algDependants(algs.size()),
+      m_algDependents(algs.size()),
       m_algProducts(algs.size()) {
    std::set<std::string> allObjectsSet;
    for(const auto& alg : algs) {
@@ -61,7 +61,7 @@ NewAlgoDependencyMap::NewAlgoDependencyMap(
    // so it's a 2 step process. We need the complete products and dependencies
    // maps for this.
    for (std::size_t i = 0; i < algs.size(); ++i) {
-      m_algDependants[i].resize(algs.size());
+      m_algDependents[i].resize(algs.size());
    }
    for (auto i = 0; i< algs.size(); ++i) {
       // All the (j) products this algorithm depends on.
@@ -87,7 +87,7 @@ NewAlgoDependencyMap::NewAlgoDependencyMap(
          auto producer = std::ranges::find_if(m_algProducts, [&](const DataObjColl_t& prod) {
             return prod.test(j);
          });
-         m_algDependants[producer - m_algProducts.begin()].set(i);
+         m_algDependents[producer - m_algProducts.begin()].set(i);
       }
    }
 }
@@ -104,12 +104,12 @@ StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg,
    return StatusCode::SUCCESS;
 }
 
-std::vector<std::size_t> NewEventContentManager::getDependantAndReadyAlgs(std::size_t algIdx, 
+std::vector<std::size_t> NewAlgoDependencyMap::getDependentAndReadyAlgs(std::size_t algIdx, 
   const NewAlgoDependencyMap & depMap) const {
-   assert(algIdx < depMap.m_algDependants.size());
+   assert(algIdx < depMap.m_algDependents.size());
    std::vector<std::size_t> readyAlgs;
 
-   auto &deps = depMap.m_algDependants[algIdx];
+   auto &deps = depMap.m_algDependents[algIdx];
    std::size_t i = deps.find_first();
    while (i != boost::dynamic_bitset<>::npos) {
       if (depMap.m_algDependencies[i].is_subset_of(m_algContent)) {
@@ -118,6 +118,13 @@ std::vector<std::size_t> NewEventContentManager::getDependantAndReadyAlgs(std::s
       i = deps.find_next(i);
    }
    return readyAlgs;
+}
+
+bool NewEventContentManager::isEventComplete() const {
+   for (std::size_t alg = 0; alg < m_algContent.size(); ++alg) {
+      if (!m_algContent.test(alg)) return false;
+   }
+   return true;
 }
 
 
@@ -156,10 +163,10 @@ void NewEventContentManager::dumpContents(const NewAlgoDependencyMap& depMap, st
         os << "\n";
     }
     os << "Dependants per algorithm:\n";
-    for (size_t i = 0; i < depMap.m_algDependants.size(); ++i) {
+    for (size_t i = 0; i < depMap.m_algDependents.size(); ++i) {
         os << "  Alg " << i << ": ";
         bool first = true;
-        for (size_t j = depMap.m_algDependants[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algDependants[i].find_next(j)) {
+        for (size_t j = depMap.m_algDependents[i].find_first(); j != boost::dynamic_bitset<>::npos; j = depMap.m_algDependents[i].find_next(j)) {
             if (!first) os << ", ";
             os << j;
             first = false;

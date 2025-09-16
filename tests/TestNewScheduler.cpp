@@ -22,7 +22,7 @@ TEST(NewSchedulerTest, RegisterFiveAlgorithms) {
 
 TEST(NewSchedulerTest, NewEventSlot) {
     MockAlgorithm algA{{}, {"prodA"}};
-    std::vector<std::reference_wrapper<AlgorithmBase>> algorithms{{algA}};
+    std::vector<std::reference_wrapper<NewAlgorithmBase>> algorithms{{algA}};
     NewAlgoDependencyMap depMap{algorithms};
     NewScheduler::NewEventSlot evSlot;
     evSlot.initialize(depMap, -1);

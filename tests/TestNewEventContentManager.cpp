@@ -26,26 +26,26 @@ TEST(NewEventContentManagerTest, Chain) {
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
-    std::vector<std::reference_wrapper<AlgorithmBase>> chainAlgs{algA, algB, algC};
+    std::vector<std::reference_wrapper<NewAlgorithmBase>> chainAlgs{algA, algB, algC};
     NewAlgoDependencyMap depmap{chainAlgs};
     NewEventContentManager manager;
     manager.resize(depmap);
-    const auto& ready = manager.getDependantAndReadyAlgs(0, depmap);
+    const auto& ready = manager.getDependentAndReadyAlgs(0, depmap);
     ASSERT_EQ(ready.size(), 0);
     auto s = manager.setAlgExecuted(0, depmap); // Mark algA as executed
     ASSERT_TRUE(s);
-    const auto& readyAfterA = manager.getDependantAndReadyAlgs(0, depmap);
+    const auto& readyAfterA = manager.getDependentAndReadyAlgs(0, depmap);
     //manager.dumpContents();
     ASSERT_EQ(readyAfterA.size(), 1);
     ASSERT_EQ(readyAfterA[0], 1); // algB should be ready
     s = manager.setAlgExecuted(1, depmap); // Mark algB as executed
     ASSERT_TRUE(s);
-    const auto& readyAfterB = manager.getDependantAndReadyAlgs(1, depmap);
+    const auto& readyAfterB = manager.getDependentAndReadyAlgs(1, depmap);
     ASSERT_EQ(readyAfterB.size(), 1);
     ASSERT_EQ(readyAfterB[0], 2); // algC should be ready
     s = manager.setAlgExecuted(2, depmap); // Mark algC as executed
     ASSERT_TRUE(s);
-    const auto& readyAfterC = manager.getDependantAndReadyAlgs(2, depmap);
+    const auto& readyAfterC = manager.getDependentAndReadyAlgs(2, depmap);
     ASSERT_EQ(readyAfterC.size(), 0); // No more algorithms should be ready
 }
 

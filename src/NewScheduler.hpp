@@ -8,8 +8,8 @@
 #include <ranges>
 #include <tbb/concurrent_queue.h>
 #include <cuda_runtime_api.h>
-#include "AlgorithmBase.hpp"
-#include "NewAlgoDependencyMap.hpp"
+#include "NewAlgorithmBase.hpp"
+#include "NewEventContentManager.hpp"
 
 namespace WP17NewScheduler {
    /**
@@ -72,11 +72,12 @@ public:
     * @brief Adds an algorithm to the algorithm list. This function should be called before running. 
     * @todo: Should this be a constant reference? 
     */
-   void addAlgorithm(AlgorithmBase& alg);
+   void addAlgorithm(NewAlgorithmBase& alg);
 
 private:
    /**
-    * @brief Assigns in initial event ids to each `slot` and creates the CUDA streams.
+    * @brief Locks the addition of new algorithms and prepares the dependency map.
+    * @note Algorithms should be added before this function is called.
     */
    void initSchedulerState();
 
@@ -109,7 +110,7 @@ public:
       /**
        * @brief Algorithm coroutine.
        */
-      AlgorithmBase::AlgCoInterface coroutine; // Coroutine interface for the algorithm
+      NewAlgorithmBase::AlgCoInterface coroutine; // Coroutine interface for the algorithm
    };
 
    /**
@@ -179,6 +180,43 @@ public:
    };
 private:
 
+   /**
+    * @brief Populates the run queue with requests for each runnable algorithm in each slot.
+    * (At this point, only the algorithms with no dependencies will be runnable).
+    */
+   void populateRunQueue();
+
+   /**
+    * @brief Schedules the next event in the given slot, if available, does nothing
+    * if all events were scheduled already, unless this is the last event, in which case
+    * it will also queue exit requests for the worker threads.
+    * @param slot The event slot to schedule the next event in.
+    * @note This function assumes that the slot's scheduling mutex is already locked.
+    */
+   void scheduleNextEventInSlot(NewEventSlot& slot);
+
+   /**
+    * @brief Starts the additional worker threads that will process the run queue from 
+    * the main thread.
+   */
+   void startWorkerThreads();
+
+   /**
+    * @brief Main loop for the worker threads, processing action requests from the run queue.
+    */
+   void processRunQueue();
+
+   /**
+    * @brief Processes a single action request from the run queue.
+    * @param req The action request to process.
+    */
+   void processActionRequest(const NewRunQueue::ActionRequest& req);
+
+   /**
+    * @brief Joins all additional worker threads, ensuring they have completed execution.
+    */
+   void joinWorkerThreads();
+
    /// @brief Number of threads to use.
    int m_threadsNumber;
 
@@ -198,7 +236,7 @@ private:
    std::atomic_int m_remainingEvents;
 
    /// @brief List of algorithms retistered in the scheduler.
-   std::vector<std::reference_wrapper<AlgorithmBase>> m_algorithms;
+   std::vector<std::reference_wrapper<NewAlgorithmBase>> m_algorithms;
 
    /// @brief The event content manager
    NewAlgoDependencyMap m_algoDependencyMap;
@@ -231,6 +269,22 @@ private:
    std::vector<std::thread> m_workerThreads;
 
 public:
+
+   static std::string to_string(ExecutionStrategy strategy) {
+      switch (strategy) {
+         case ExecutionStrategy::SingleLaunch:               return "SingleLaunch";
+         case ExecutionStrategy::Graph:                      return "Graph";
+         case ExecutionStrategy::GraphFullyDelegated:        return "GraphFullyDelegated";
+         case ExecutionStrategy::CachedGraphs:               return "CachedGraphs";
+         case ExecutionStrategy::StraightLaunches:           return "StraightLaunches";
+         case ExecutionStrategy::StraightDelegated:          return "StraightDelegated";
+         case ExecutionStrategy::StraightMutexed:            return "StraightMutexed";
+         case ExecutionStrategy::StraightThreadLocalStreams: return "StraightThreadLocalStreams";
+         case ExecutionStrategy::StraightThreadLocalContext: return "StraightThreadLocalContext";
+         case ExecutionStrategy::CachedGraphsDelegated:      return "CachedGraphsDelegated";
+         default:                                            return "Unknown";
+      }
+   }
 
    /// @brief Exception class for scheduler errors.
    DEFINE_EXCEPTION(RuntimeError);

@@ -7,8 +7,9 @@
 #include <mutex>
 #include <vector>
 
+
 // Forward declarations.
-class AlgorithmBase;
+class NewAlgorithmBase;
 class StatusCode;
 
 /**
@@ -34,7 +35,7 @@ public:
     * @param algs A vector of references to AlgorithmBase objects.
     */
    explicit NewAlgoDependencyMap(
-       const std::vector<std::reference_wrapper<AlgorithmBase>>& algs);
+       const std::vector<std::reference_wrapper<NewAlgorithmBase>>& algs);
    NewAlgoDependencyMap(const NewAlgoDependencyMap& E) = delete;
    NewAlgoDependencyMap& operator=(const NewAlgoDependencyMap& E) = delete;
 
@@ -55,11 +56,11 @@ private:
               const std::vector<std::string>& objects);
    };
 
-   /// Per-algorithm dependencies (which producats the algorithm depends on).
+   /// Per-algorithm dependencies (which products the algorithm depends on).
    std::vector<DataObjColl_t> m_algDependencies;
 
    /// Per-algorithm dependants (which algorithms depend on this ones products).
-   std::vector<DataObjColl_t> m_algDependants;
+   std::vector<DataObjColl_t> m_algDependents;
 
    /// Per-algorithm products (which products the algorithm produces).
    std::vector<DataObjColl_t> m_algProducts;
@@ -100,8 +101,14 @@ public:
     * @param depMap Reference to the NewAlgoDependencyMap containing the algorithm dependencies.
     * @return A vector of indices of the algorithms that are ready to be executed.
     */
-   std::vector<std::size_t> getDependantAndReadyAlgs (
+   std::vector<std::size_t> getDependentAndReadyAlgs (
        std::size_t algIdx, const NewAlgoDependencyMap& depMap) const;
+
+   /**
+    * @brief Check if all algorithms have completed execution.
+    * @return true if all algorithms have completed, false otherwise.
+    */
+   bool isEventComplete() const;
 
    /**
     * @brief Check if an algorithm's data dependencies are availble.

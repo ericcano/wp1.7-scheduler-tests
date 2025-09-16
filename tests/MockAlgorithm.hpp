@@ -1,11 +1,11 @@
 #pragma once
-#include "AlgorithmBase.hpp"
+#include "NewAlgorithmBase.hpp"
 #include "EventContext.hpp"
 #include <vector>
 #include <string>
 #include <cassert>
 
-class MockAlgorithm : public AlgorithmBase {
+class MockAlgorithm : public NewAlgorithmBase {
 public:
     MockAlgorithm(const std::vector<std::string>& dependencies,
                  const std::vector<std::string>& products) {
@@ -19,6 +19,6 @@ public:
         }
     }
     StatusCode initialize() override { return StatusCode::SUCCESS; }
-    AlgCoInterface execute(EventContext) const override { return {}; }
+    AlgCoInterface execute() const override { return {}; }
     StatusCode finalize() override { return StatusCode::SUCCESS; }
 };

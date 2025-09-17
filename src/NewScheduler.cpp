@@ -88,13 +88,34 @@ void NewScheduler::populateRunQueue() {
 }
 
 NewScheduler::NewRunQueue::ActionRequest NewScheduler::scheduleNextEventInSlot(NewEventSlot& slot) {
-  // Update slot event number and clear the coroutines.
-  slot.eventNumber = m_nextEventId++;
   // Clear all coroutines in the slot.
   for (auto& alg: slot.algorithms) {
     std::scoped_lock lock(alg.mutex);
+    if (alg.coroutine.empty() || alg.coroutine.isResumable()) {
+      std::cerr << "In NewScheduler::scheduleNextEventInSlot(): Attempting to schedule a new event in a slot where an algorithm has not completed." << std::endl;
+      std::cerr << "Event Slot State:" << std::endl;
+      std::cerr << "Event Number: " << slot.eventNumber << std::endl;
+      std::cerr << "Algorithms:" << std::endl;
+      for (std::size_t i = 0; i < slot.algorithms.size(); ++i) {
+        auto& a = slot.algorithms[i];
+        std::cerr << "  Algorithm " << i << ": ";
+        if (a.coroutine.empty()) {
+          std::cerr << "Not started";
+        } else if (a.coroutine.isResumable()) {
+          std::cerr << "Resumable";
+        } else {
+          std::cerr << "Completed";
+        }
+        std::cerr << std::endl;
+      }
+      throw RuntimeError("In NewScheduler::scheduleNextEventInSlot(): Algorithm has not completed for previous event");
+    }
     alg.coroutine.setEmpty();
   }
+  // Update slot event number and clear the coroutines.
+  slot.eventNumber = m_nextEventId++;
+  slot.eventStore.clear();
+  slot.eventContentManager.reset();
   // If we completed the last event, we need to signal the worker threads to exit.
   if (m_remainingEventsToComplete.fetch_sub(1) == 1) {
     for (int i = 0; i < m_threadsNumber; ++i) {
@@ -162,10 +183,15 @@ void NewScheduler::processRunQueue() {
 
 void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
   begin:
+  // std::cout << "Processing request: slot=" << req.slot << ", alg=" << req.alg << ", type=" 
+  //           << (req.type == NewRunQueue::ActionRequest::ActionType::Start ? "Start" : 
+  //               req.type == NewRunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit");
+  // Validate the request.
   if (req.slot < 0 || req.slot >= m_eventSlotsNumber) {
     throw RuntimeError("In NewScheduler::processActionRequest(): Invalid slot index");
   }
   auto& slot = m_eventSlots[req.slot];
+  //std::cout << ", event=" << slot.eventNumber << std::endl;
   if (req.alg < 0 || req.alg >= slot.algorithms.size()) {
     throw RuntimeError("In NewScheduler::processActionRequest(): Invalid algorithm index");
   }
@@ -176,6 +202,27 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
 
   // If the request is to start, ensure the algorithm has not already run for this event.
   if (req.type == NewRunQueue::ActionRequest::ActionType::Start) {
+    // If the coroutine is not empty, dump the whole slot state for debugging.
+    if (!algSlot.coroutine.empty()) {
+      std::cerr << "In NewScheduler::processActionRequest(): Attempting to start an algorithm that has already started for this event." << std::endl;
+      std::cerr << "Request: slot=" << req.slot << ", alg=" << req.alg << std::endl;
+      std::cerr << "Event Slot State:" << std::endl;
+      std::cerr << "Event Number: " << slot.eventNumber << std::endl;
+      std::cerr << "Algorithms:" << std::endl;
+      for (std::size_t i = 0; i < slot.algorithms.size(); ++i) {
+        auto& a = slot.algorithms[i];
+        std::cerr << "  Algorithm " << i << ": ";
+        if (a.coroutine.empty()) {
+          std::cerr << "Not started";
+        } else if (a.coroutine.isResumable()) {
+          std::cerr << "Resumable";
+        } else {
+          std::cerr << "Completed";
+        }
+        std::cerr << std::endl;
+      }
+      throw RuntimeError("In NewScheduler::processActionRequest(): Algorithm already started for this event");
+    }
     assert(algSlot.coroutine.empty());
     auto & alg = m_algorithms[req.alg].get();
     NewAlgoContext ctx{
@@ -273,6 +320,7 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
         if (nextReq.exit) return;
         slotLock.~lock_guard();
         req = nextReq;
+        // std::cout << "GOTO on next event ";
         goto begin;
       }
     } else {
@@ -283,6 +331,7 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
         m_runQueue.queue.push(depReq);
       }
       algLock.~lock_guard();
+      // std::cout << "GOTO on dependent ";
       goto begin;
     }
   }

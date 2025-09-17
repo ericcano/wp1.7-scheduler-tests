@@ -91,4 +91,36 @@ TEST(NewSchedulerTest, scheduleEvent) {
     }
 }
 
+TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
+    NewScheduler sched(10,30);
+    mtaExecutionTracker = &MockTrackingAlgorithm::getExecutionTracker().tracker;
+    MockTrackingAlgorithm algA{{}, {"prodA"}};
+    MockTrackingAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
+    MockTrackingAlgorithm algC{{"prodA"}, {"prodC"}};
+    MockTrackingAlgorithm algD{{"prodC"}, {"prodD"}};
+    MockTrackingAlgorithm algE{{"prodC", "prodD"}, {"prodE"}};
+    sched.addAlgorithm(algA);
+    sched.addAlgorithm(algB);
+    sched.addAlgorithm(algC);
+    sched.addAlgorithm(algD);
+    sched.addAlgorithm(algE);
+    sched.initSchedulerState();
+
+    NewScheduler::RunStats stats;
+    int nEvents = 100;
+    StatusCode s;
+    s = sched.run(nEvents, stats);
+
+    
+    // Check that all algorithms have been executed for each event
+    auto lockedTracker = MockTrackingAlgorithm::getExecutionTracker();
+    auto& executionTracker = lockedTracker.tracker;
+    for (int eventNum = 0; eventNum < nEvents; ++eventNum) {
+        for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
+            auto it = executionTracker.find({eventNum, algNum});
+            ASSERT_NE(it, executionTracker.end()) << "Algorithm " << algNum 
+                << " was not executed for event " << eventNum;
+        }
+    }
+}
 

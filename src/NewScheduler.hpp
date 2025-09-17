@@ -221,7 +221,7 @@ private:
     * @brief Processes a single action request from the run queue.
     * @param req The action request to process.
     */
-   void processActionRequest(const NewRunQueue::ActionRequest& req);
+   void processActionRequest(NewRunQueue::ActionRequest& req);
 
    /**
     * @brief Joins all additional worker threads, ensuring they have completed execution.

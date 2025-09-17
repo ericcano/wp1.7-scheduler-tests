@@ -152,7 +152,7 @@ void NewScheduler::processRunQueue() {
   }
 }
 
-void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
+void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
   begin:
   if (req.slot < 0 || req.slot >= m_eventSlotsNumber) {
     throw RuntimeError("In NewScheduler::processActionRequest(): Invalid slot index");
@@ -267,16 +267,13 @@ void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
       }
     } else {
       slotLock.~lock_guard();
-      // TODO: recycle the function (requires refactoring)
-      //NewRunQueue::ActionRequest ours {NewRunQueue::ActionRequest::ActionType::Start, req.slot, dependents[0], false};
-      for (std::size_t i = 0 /* TODO: will be one where we add in-place re-running one algo */; i < dependents.size(); ++i) {
+      req = {NewRunQueue::ActionRequest::ActionType::Start, req.slot, dependents[0], false};
+      for (std::size_t i = 1; i < dependents.size(); ++i) {
         NewRunQueue::ActionRequest depReq{NewRunQueue::ActionRequest::ActionType::Start, req.slot, dependents[i], false};
         m_runQueue.queue.push(depReq);
       }
-      // TODO: recycle the function (requires refactoring)
-      //req = ours; // Process one of the ready dependents immediately.
-      //algLock.~lock_guard();
-      //goto begin;
+      algLock.~lock_guard();
+      goto begin;
     }
   }
 }

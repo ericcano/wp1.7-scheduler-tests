@@ -3,6 +3,8 @@
 #include <exception>
 #include <ranges>
 
+#pragma GCC optimize("O0")
+
 NewScheduler::NewScheduler(int threads, int slots, ExecutionStrategy executionStrategy)
     : m_threadsNumber{threads},
       m_eventSlotsNumber{slots},
@@ -86,19 +88,23 @@ void NewScheduler::populateRunQueue() {
 }
 
 void NewScheduler::scheduleNextEventInSlot(NewEventSlot& slot) {
-  // Update slot event number in all cases.
+  // Update slot event number and clear the coroutines.
   slot.eventNumber = m_nextEventId++;
-  // Did we reach the target event number?
-  if (slot.eventNumber >= m_targetEventId) {
-    // We do not need to schedule this event. In addition, if we finished processing
-    // all events, we need to queue exit requests for the worker threads.
-    if (m_remainingEventsToComplete.fetch_sub(1) == 1) {
-      for (int i = 0; i < m_threadsNumber - 1; ++i) {
-        NewRunQueue::ActionRequest exitReq{NewRunQueue::ActionRequest::ActionType::Exit, -1,
-          std::numeric_limits<std::size_t>::max(), true};
-        m_runQueue.queue.push(exitReq);
-      }
+  // Clear all coroutines in the slot.
+  for (auto& alg: slot.algorithms) {
+    std::scoped_lock lock(alg.mutex);
+    alg.coroutine.setEmpty();
+  }
+  // If we completed the last event, we need to signal the worker threads to exit.
+  if (m_remainingEventsToComplete.fetch_sub(1) == 1) {
+    for (int i = 0; i < m_threadsNumber; ++i) {
+      NewRunQueue::ActionRequest exitReq{NewRunQueue::ActionRequest::ActionType::Exit, -1,
+        std::numeric_limits<std::size_t>::max(), true};
+      m_runQueue.queue.push(exitReq);
     }
+  }
+  // Did we reach the target event number. In this case, we do not need to schedule it.
+  if (slot.eventNumber >= m_targetEventId) {
     return; // No more events to schedule in this slot.
   }
   // We will schedule this event's first algos.
@@ -160,8 +166,9 @@ void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
   // Lock the algorithm mutex to ensure only one thread runs the algorithm's coroutine at a time.
   std::lock_guard<std::mutex> algLock(algSlot.mutex);
 
-  // If the coroutine is not yet created, create it.
-  if (algSlot.coroutine.empty()) {
+  // If the request is to start, ensure the algorithm has not already run for this event.
+  if (req.type == NewRunQueue::ActionRequest::ActionType::Start) {
+    assert(algSlot.coroutine.empty());
     auto & alg = m_algorithms[req.alg].get();
     NewAlgoContext ctx{
       .eventNumber = slot.eventNumber,
@@ -207,8 +214,10 @@ void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
           std::cerr << "In Scheduler::pushAction(): Unknown execution strategy:" << to_string(m_executionStrategy) << std::endl;
           abort();
     }
-  } else {
+  } else if(req.type == NewRunQueue::ActionRequest::ActionType::Resume) {
     algSlot.coroutine.resume();
+  } else {
+    throw RuntimeError("In NewScheduler::processActionRequest(): Unexpected action request type");
   }
 
   // Let's see the outcome.
@@ -227,6 +236,9 @@ void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
     abort();
   }
 
+  // We are done with the algorithm for now.
+  algLock.~lock_guard();
+
   // If an algorithm completed, there might be more to execute.
   if (done) {
     // Algorithm finished processing for this event.
@@ -241,6 +253,7 @@ void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
       // Check if all algorithms are done.
       bool allDone = true;
       for (auto& alg : slot.algorithms) {
+        std::scoped_lock lock(alg.mutex);
         if (alg.coroutine.empty() ||  alg.coroutine.isResumable()) {
           allDone = false;
           break;
@@ -256,8 +269,8 @@ void NewScheduler::processActionRequest(const NewRunQueue::ActionRequest& req) {
       slotLock.~lock_guard();
       // TODO: recycle the function (requires refactoring)
       //NewRunQueue::ActionRequest ours {NewRunQueue::ActionRequest::ActionType::Start, req.slot, dependents[0], false};
-      for (std::size_t i = 1; i < dependents.size(); ++i) {
-        NewRunQueue::ActionRequest depReq{NewRunQueue::ActionRequest::ActionType::Resume, req.slot, dependents[i], false};
+      for (std::size_t i = 0 /* TODO: will be one where we add in-place re-running one algo */; i < dependents.size(); ++i) {
+        NewRunQueue::ActionRequest depReq{NewRunQueue::ActionRequest::ActionType::Start, req.slot, dependents[i], false};
         m_runQueue.queue.push(depReq);
       }
       // TODO: recycle the function (requires refactoring)

@@ -3,6 +3,8 @@
 #include "MockAlgorithm.hpp"
 #include <ranges>
 
+#pragma GCC optimize ("O0")
+
 TEST(NewSchedulerTest, RegisterFiveAlgorithms) {
     NewScheduler sched;
     MockAlgorithm algA{{}, {"prodA"}};
@@ -51,6 +53,41 @@ TEST(NewSchedulerTest, initSchedulerState) {
         ASSERT_EQ(evSlot.algorithms.size(), 5);
         // At initialization, eventNumber should be equal to slot index
         ASSERT_EQ(evSlot.eventNumber, i);
+    }
+}
+
+MockTrackingAlgorithm::ExecutionTracker* mtaExecutionTracker = nullptr;
+
+TEST(NewSchedulerTest, scheduleEvent) {
+    NewScheduler sched(10,30);
+    mtaExecutionTracker = &MockTrackingAlgorithm::getExecutionTracker().tracker;
+    MockTrackingAlgorithm algA{{}, {"prodA"}};
+    MockTrackingAlgorithm algB{{"prodA"}, {"prodB"}};
+    MockTrackingAlgorithm algC{{"prodB"}, {"prodC"}};
+    MockTrackingAlgorithm algD{{"prodC"}, {"prodD"}};
+    MockTrackingAlgorithm algE{{"prodD"}, {"prodE"}};
+    sched.addAlgorithm(algA);
+    sched.addAlgorithm(algB);
+    sched.addAlgorithm(algC);
+    sched.addAlgorithm(algD);
+    sched.addAlgorithm(algE);
+    sched.initSchedulerState();
+
+    NewScheduler::RunStats stats;
+    int nEvents = 100;
+    StatusCode s;
+    s = sched.run(nEvents, stats);
+
+    
+    // Check that all algorithms have been executed for each event
+    auto lockedTracker = MockTrackingAlgorithm::getExecutionTracker();
+    auto& executionTracker = lockedTracker.tracker;
+    for (int eventNum = 0; eventNum < nEvents; ++eventNum) {
+        for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
+            auto it = executionTracker.find({eventNum, algNum});
+            ASSERT_NE(it, executionTracker.end()) << "Algorithm " << algNum 
+                << " was not executed for event " << eventNum;
+        }
     }
 }
 

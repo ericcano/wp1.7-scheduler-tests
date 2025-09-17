@@ -87,7 +87,7 @@ void NewScheduler::populateRunQueue() {
   }
 }
 
-void NewScheduler::scheduleNextEventInSlot(NewEventSlot& slot) {
+NewScheduler::NewRunQueue::ActionRequest NewScheduler::scheduleNextEventInSlot(NewEventSlot& slot) {
   // Update slot event number and clear the coroutines.
   slot.eventNumber = m_nextEventId++;
   // Clear all coroutines in the slot.
@@ -105,18 +105,26 @@ void NewScheduler::scheduleNextEventInSlot(NewEventSlot& slot) {
   }
   // Did we reach the target event number. In this case, we do not need to schedule it.
   if (slot.eventNumber >= m_targetEventId) {
-    return; // No more events to schedule in this slot.
+    return NewRunQueue::ActionRequest{NewRunQueue::ActionRequest::ActionType::Exit, 0, 0, true};
   }
   // We will schedule this event's first algos.
+  NewRunQueue::ActionRequest firstReq;
+  bool first = true;
   for (auto& alg: slot.algorithms) {
     std::size_t algId = &alg - &slot.algorithms[0];
     if(m_algoDependencyMap.isAlgIndependent(algId)) {
       
       int sId = &slot - &m_eventSlots[0];
       NewRunQueue::ActionRequest req{NewRunQueue::ActionRequest::ActionType::Start, sId, algId, false};
-      m_runQueue.queue.push(req);
+      if (first) {
+        first = false;
+        firstReq = req;
+      } else {
+        m_runQueue.queue.push(req);
+      }
     }
   }
+  return firstReq;
 }
 
 void NewScheduler::startWorkerThreads() {
@@ -261,9 +269,11 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
       }
       if (allDone) {
         // Schedule the next event if available.
-        scheduleNextEventInSlot(slot);
-        // TODO: we could run the one algorithm of the next event here...
-        // ...but scheduleNextEventInSlot will also manage termination, so we'll add this optimization later.
+        auto nextReq = scheduleNextEventInSlot(slot);
+        if (nextReq.exit) return;
+        slotLock.~lock_guard();
+        req = nextReq;
+        goto begin;
       }
     } else {
       slotLock.~lock_guard();

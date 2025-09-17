@@ -204,7 +204,7 @@ private:
     * @param slot The event slot to schedule the next event in.
     * @note This function assumes that the slot's scheduling mutex is already locked.
     */
-   void scheduleNextEventInSlot(NewEventSlot& slot);
+   NewRunQueue::ActionRequest scheduleNextEventInSlot(NewEventSlot& slot);
 
    /**
     * @brief Starts the additional worker threads that will process the run queue from 

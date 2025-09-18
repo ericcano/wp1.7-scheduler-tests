@@ -11,6 +11,19 @@ NewScheduler::NewScheduler(int threads, int slots, ExecutionStrategy executionSt
       m_nextEventId{},
       m_executionStrategy(executionStrategy) {}
 
+NewScheduler::NewEventSlot::NewEventSlot() {
+  // Create a CUDA stream for the slot.
+  ASSERT_CUDA(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+}
+
+NewScheduler::NewEventSlot::~NewEventSlot() {
+  // Destroy the CUDA stream for the slot.
+  if (stream) {
+    cudaStreamDestroy(stream);
+    stream = nullptr;
+  }
+}
+
 
 void NewScheduler::addAlgorithm(NewAlgorithmBase& alg) {
   if (m_runStarted) {

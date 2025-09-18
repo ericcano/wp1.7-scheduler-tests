@@ -40,7 +40,7 @@ SecondAlgorithmGraph::SecondAlgorithmGraph() {
     m_kernel4Params.extra = nullptr;
     CUDA_ASSERT(cudaGraphAddKernelNode(&m_kernel4Node, m_graph, &m_kernel3Node, 1, &m_kernel4Params));
     
-    m_hostFunctionParams.fn = notifyScheduler;
+    m_hostFunctionParams.fn = NewAlgoContext::newScheduleResumeCallback;
     m_hostFunctionParams.userData = nullptr;
     CUDA_ASSERT(cudaGraphAddHostNode(&m_HostFunctionNode, m_graph, &m_kernel4Node, 1, &m_hostFunctionParams));
     
@@ -53,7 +53,7 @@ SecondAlgorithmGraph::~SecondAlgorithmGraph() {
     if (m_graph) cudaGraphDestroy(m_graph);
 }
 
-void SecondAlgorithmGraph::launchGraph(cudaStream_t stream, Notification* notification) {
+void SecondAlgorithmGraph::launchGraph(cudaStream_t stream, NewAlgoContext* notification) {
     std::lock_guard<std::mutex> lock(m_graphMutex);
 
     // Only update host function userData for this launch
@@ -63,7 +63,7 @@ void SecondAlgorithmGraph::launchGraph(cudaStream_t stream, Notification* notifi
     CUDA_ASSERT(cudaGraphLaunch(m_graphExec, stream));
 }
 
-void SecondAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, Notification* notification) {
+void SecondAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, NewAlgoContext* notification) {
     std::lock_guard<std::mutex> lock(m_graphMutex);
     std::promise<void> promise;
     std::future<void> future = promise.get_future();
@@ -86,30 +86,29 @@ SecondAlgorithm::SecondAlgorithm(bool verbose)
 
 StatusCode SecondAlgorithm::initialize() {
     nvtx3::scoped_range range{MEMBER_FUNCTION_NAME(SecondAlgorithm)};
-    SC_CHECK(AlgorithmBase::addDependency<int>("Object1"));
-    SC_CHECK(AlgorithmBase::addProduct<int>("Object3"));
+    SC_CHECK(addDependency<int>("Object1"));
+    SC_CHECK(addProduct<int>("Object3"));
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) << std::endl;
     }
     return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::execute(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
     nvtx3::unique_range range{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
     launchTestKernel3(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new Notification{ctx, 1});
+    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -117,9 +116,8 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::execute(EventContext ctx) const {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part2 start, " << ctx.info() << std::endl;
     }
     nvtx3::unique_range range2{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part2" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new Notification{ctx, 1});
+    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
     { auto r2 = std::move(range2); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -130,23 +128,22 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::execute(EventContext ctx) const {
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
     auto range1 = std::make_unique<nvtx3::unique_range>(MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber});
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new Notification{ctx, 1});
+    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -157,22 +154,21 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(EventContext ctx)
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
     auto range1 = std::make_unique<nvtx3::unique_range>(MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber});
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
     // Launch kernels in a single thread to avoid performance drop
-    auto * notif = new Notification{ctx, 1};
+    auto * notif = new NewAlgoContext{ctx};
     CUDAThread::post([ctx, notif]() {
         launchTestKernel3(ctx.stream);
         launchTestKernel4(ctx.stream);
@@ -188,24 +184,23 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(EventCon
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
     auto range1 = std::make_unique<nvtx3::unique_range>(MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber});
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
     auto cudaLock = CUDAMutex::lock();
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new Notification{ctx, 1});
+    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
     cudaLock.unlock();
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
@@ -217,24 +212,23 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(EventConte
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStreams(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStreams(NewAlgoContext& ctx) const {
     auto stream = CUDAThreadLocalStream::get();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
     auto range1 = std::make_unique<nvtx3::unique_range>(MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1" + ctx.info() + " stream=" + std::to_string((uint64_t)stream), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber});
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
     launchTestKernel3(stream);
     launchTestKernel4(stream);
-    cudaLaunchHostFunc(stream, notifyScheduler, new Notification{ctx, 1});
+    cudaLaunchHostFunc(stream, notifyScheduler, new NewAlgoContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -245,24 +239,23 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStreams
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalContext(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalContext(NewAlgoContext& ctx) const {
     CUDAThreadLocalContext::check();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
     auto range1 = std::make_unique<nvtx3::unique_range>(MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber});
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new Notification{ctx, 1});
+    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -273,23 +266,22 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalContext
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
     nvtx3::unique_range range{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] launching CUDA graph, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
 
     // Allocate a notification for the host node
-    Notification* notification = new Notification{ctx, 1};
+    auto* notification = new NewAlgoContext{ctx};
     m_graphImpl.launchGraph(ctx.stream, notification);
 
     { auto r = std::move(range); } // End range
@@ -302,23 +294,22 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(EventContext ctx) co
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
     nvtx3::unique_range range{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] launching CUDA graph, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
 
     // Allocate a notification for the host node
-    Notification* notif = new Notification{ctx, 1};
+    auto* notif = new NewAlgoContext{ctx};
     CUDAThread::post([ctx, notif, this]() {
         m_graphContainer.launchGraph(ctx.stream, notif);
     });
@@ -333,23 +324,22 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(EventC
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
     nvtx3::unique_range range{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] launching CUDA graph, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
 
     // Allocate a notification for the host node
-    Notification* notification = new Notification{ctx, 1};
+    auto* notification = new NewAlgoContext{ctx};
     m_graphContainer.launchGraph(ctx.stream, notification);
 
     { auto r = std::move(range); } // End range
@@ -362,23 +352,22 @@ AlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(EventContext c
     co_return StatusCode::SUCCESS;
 }
 
-AlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraphDelegated(EventContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraphDelegated(NewAlgoContext& ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
     nvtx3::unique_range range{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
     const int* input = nullptr;
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).retrieve(input, AlgorithmBase::dependencies()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dependencies()[0]));
     auto output = std::make_unique<int>(-1);
-    SC_CHECK_YIELD(EventStoreRegistry::of(ctx).record(std::move(output), AlgorithmBase::products()[0]));
+    SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), products()[0]));
 
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] launching CUDA graph, " << ctx.info() << std::endl;
     }
-    ctx.scheduler->setCudaSlotState(ctx.slotNumber, 1, false);
 
     // Allocate a notification for the host node
-    Notification* notification = new Notification{ctx, 1};
+    auto* notification = new NewAlgoContext{ctx};
     m_graphContainer.launchGraphDelegated(ctx.stream, notification);
 
     { auto r = std::move(range); } // End range

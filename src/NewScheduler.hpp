@@ -122,8 +122,9 @@ public:
     * @brief Structure holding all the algos and data for one the processing of one event.
     */
    struct NewEventSlot {
-
-      NewEventSlot() = default;
+      // Constructors and destructors will manage the CUDA stream.
+      NewEventSlot();
+      ~NewEventSlot();
       NewEventSlot(const NewEventSlot&) = delete;
       NewEventSlot& operator=(const NewEventSlot&) = delete;
       NewEventSlot(NewEventSlot&&) = delete;
@@ -169,8 +170,6 @@ public:
        * @brief CUDA stream for the slot
        */
       cudaStream_t stream = nullptr;
-      // Add product manager ?
-      // TODO: Add helper functions
    };
 
    /**

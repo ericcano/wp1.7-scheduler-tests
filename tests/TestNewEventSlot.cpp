@@ -6,7 +6,7 @@ TEST(NewEventSlotTest, Basics) {
     NewScheduler::NewEventSlot evSlot;
     ASSERT_EQ(evSlot.eventNumber, -1); // Default event number
     ASSERT_TRUE(evSlot.algorithms.empty()); // No algorithms by default
-    ASSERT_EQ(evSlot.stream, (cudaStream_t)cudaStreamDefault); // Stream should be initialized
+    ASSERT_NE(evSlot.stream, (cudaStream_t)cudaStreamDefault); // Stream should be initialized to non default
     // Mutex cannot be directly tested, but we can check that it exists
     ASSERT_NO_THROW(evSlot.schedulingMutex.lock());
     evSlot.schedulingMutex.unlock();

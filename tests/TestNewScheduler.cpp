@@ -56,16 +56,14 @@ TEST(NewSchedulerTest, initSchedulerState) {
     }
 }
 
-MockTrackingAlgorithm::ExecutionTracker* mtaExecutionTracker = nullptr;
 
 TEST(NewSchedulerTest, scheduleEvent) {
     NewScheduler sched(10,30);
-    mtaExecutionTracker = &MockTrackingAlgorithm::getExecutionTracker().tracker;
-    MockTrackingAlgorithm algA{{}, {"prodA"}};
-    MockTrackingAlgorithm algB{{"prodA"}, {"prodB"}};
-    MockTrackingAlgorithm algC{{"prodB"}, {"prodC"}};
-    MockTrackingAlgorithm algD{{"prodC"}, {"prodD"}};
-    MockTrackingAlgorithm algE{{"prodD"}, {"prodE"}};
+    MockAlgorithm algA{{}, {"prodA"}};
+    MockAlgorithm algB{{"prodA"}, {"prodB"}};
+    MockAlgorithm algC{{"prodB"}, {"prodC"}};
+    MockAlgorithm algD{{"prodC"}, {"prodD"}};
+    MockAlgorithm algE{{"prodD"}, {"prodE"}};
     sched.addAlgorithm(algA);
     sched.addAlgorithm(algB);
     sched.addAlgorithm(algC);
@@ -80,7 +78,7 @@ TEST(NewSchedulerTest, scheduleEvent) {
 
     
     // Check that all algorithms have been executed for each event
-    auto lockedTracker = MockTrackingAlgorithm::getExecutionTracker();
+    auto lockedTracker = MockAlgorithm::getExecutionTracker();
     auto& executionTracker = lockedTracker.tracker;
     for (int eventNum = 0; eventNum < nEvents; ++eventNum) {
         for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
@@ -93,12 +91,11 @@ TEST(NewSchedulerTest, scheduleEvent) {
 
 TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
     NewScheduler sched(10,30);
-    mtaExecutionTracker = &MockTrackingAlgorithm::getExecutionTracker().tracker;
-    MockTrackingAlgorithm algA{{}, {"prodA"}};
-    MockTrackingAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
-    MockTrackingAlgorithm algC{{"prodA"}, {"prodC"}};
-    MockTrackingAlgorithm algD{{"prodC"}, {"prodD"}};
-    MockTrackingAlgorithm algE{{"prodC", "prodD"}, {"prodE"}};
+    MockAlgorithm algA{{}, {"prodA"}};
+    MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
+    MockAlgorithm algC{{"prodA"}, {"prodC"}};
+    MockAlgorithm algD{{"prodC"}, {"prodD"}};
+    MockAlgorithm algE{{"prodC", "prodD"}, {"prodE"}};
     sched.addAlgorithm(algA);
     sched.addAlgorithm(algB);
     sched.addAlgorithm(algC);
@@ -113,7 +110,7 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
 
     
     // Check that all algorithms have been executed for each event
-    auto lockedTracker = MockTrackingAlgorithm::getExecutionTracker();
+    auto lockedTracker = MockAlgorithm::getExecutionTracker();
     auto& executionTracker = lockedTracker.tracker;
     for (int eventNum = 0; eventNum < nEvents; ++eventNum) {
         for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
@@ -123,4 +120,6 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
         }
     }
 }
+
+
 

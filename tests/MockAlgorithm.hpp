@@ -5,6 +5,9 @@
 #include <string>
 #include <cassert>
 
+/**
+ * @brief A mock algorithm for testing purposes. Records algorithm execution. Can inject errors.
+ */
 class MockAlgorithm : public NewAlgorithmBase {
 public:
     MockAlgorithm(const std::vector<std::string>& dependencies,
@@ -19,26 +22,11 @@ public:
         }
     }
     StatusCode initialize() override { return StatusCode::SUCCESS; }
-    AlgCoInterface execute(NewAlgoContext& ctx) const override { co_return {}; }
-    StatusCode finalize() override { return StatusCode::SUCCESS; }
-};
-
-class MockTrackingAlgorithm : public NewAlgorithmBase {
-public:
-    MockTrackingAlgorithm(const std::vector<std::string>& dependencies,
-                 const std::vector<std::string>& products) {
-        for (const auto& dep : dependencies) {
-            auto s = addDependency<int>(dep);
-            assert(s);
-        }
-        for (const auto& prod : products) {
-            auto s = addProduct<int>(prod);
-            assert(s);
-        }
-    }
-    StatusCode initialize() override { return StatusCode::SUCCESS; }
     AlgCoInterface execute(NewAlgoContext& ctx) const override {
         getExecutionTracker().tracker.insert({ctx.eventNumber, ctx.algorithmNumber});
+        if (ctx.eventNumber == m_injectErrorAtEvent) {
+            co_return StatusCode::FAILURE;
+        }
         co_return {}; 
     }
     StatusCode finalize() override { return StatusCode::SUCCESS; }
@@ -57,5 +45,12 @@ public:
         return {std::scoped_lock<std::mutex>(mutex), executionTracker};
     }
     
+    // Inject errors,
+    private:
+    std::size_t m_injectErrorAtEvent = std::numeric_limits<std::size_t>::max();
+
+    public:
+    void setInjectErrorAtEvent(std::size_t event) { m_injectErrorAtEvent = event; }
+
     // TODO: add event store interface.
 };

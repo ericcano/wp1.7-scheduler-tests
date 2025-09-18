@@ -23,7 +23,6 @@ void NewScheduler::addAlgorithm(NewAlgorithmBase& alg) {
 void NewScheduler::initSchedulerState()  {
   // Ge all to initial state
   m_nextEventId = 0;
-  m_remainingEventsToSchedule = 0;
   m_remainingEventsToComplete = 0;
   m_eventSlots.clear();
   // First, populate the algorithm dependency map with the algorithms.
@@ -47,7 +46,6 @@ StatusCode NewScheduler::run(int eventsToProcess, RunStats& stats) {
     initSchedulerState();
     m_runStarted = true;
   }
-  m_remainingEventsToSchedule.store(eventsToProcess);
   m_remainingEventsToComplete.store(eventsToProcess);
   m_targetEventId += eventsToProcess;
   auto startTime = std::chrono::high_resolution_clock::now();

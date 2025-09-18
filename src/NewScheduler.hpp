@@ -243,8 +243,6 @@ private:
    /// @brief Target event number for the current run.
    int m_targetEventId = 0;
 
-   /// @brief Number of events remaining to be processed.
-   std::atomic_int m_remainingEventsToSchedule = 0;
 
    /// @brief Number of events remaining to be fully processed.
    std::atomic_int m_remainingEventsToComplete = 0;

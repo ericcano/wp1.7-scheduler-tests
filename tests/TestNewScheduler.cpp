@@ -23,6 +23,7 @@ TEST(NewSchedulerTest, RegisterFiveAlgorithms) {
 }
 
 TEST(NewSchedulerTest, NewEventSlot) {
+    MockAlgorithm::clear();
     MockAlgorithm algA{{}, {"prodA"}};
     std::vector<std::reference_wrapper<NewAlgorithmBase>> algorithms{{algA}};
     NewAlgoDependencyMap depMap{algorithms};
@@ -33,6 +34,7 @@ TEST(NewSchedulerTest, NewEventSlot) {
 }
 
 TEST(NewSchedulerTest, initSchedulerState) {
+    MockAlgorithm::clear();
     NewScheduler sched;
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
@@ -58,6 +60,7 @@ TEST(NewSchedulerTest, initSchedulerState) {
 
 
 TEST(NewSchedulerTest, scheduleEvent) {
+    MockAlgorithm::clear();
     NewScheduler sched(10,30);
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
@@ -90,6 +93,7 @@ TEST(NewSchedulerTest, scheduleEvent) {
 }
 
 TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
+    MockAlgorithm::clear();
     NewScheduler sched(10,30);
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
@@ -121,5 +125,56 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
     }
 }
 
+TEST(NewSchedulerTest, scheduleEventLinearWithError) {
+    MockAlgorithm::clear();
+    NewScheduler sched(1,1);
+    MockAlgorithm algA{{}, {"prodA"}};
+    MockAlgorithm algB{{"prodA"}, {"prodB"}};
+    MockAlgorithm algC{{"prodB"}, {"prodC"}};
+    MockAlgorithm algD{{"prodC"}, {"prodD"}};
+    MockAlgorithm algE{{"prodD"}, {"prodE"}};
+    std::size_t errorEvent = 42;
+    std::size_t errorAlgorithm = 2; // algC
+    algC.setInjectErrorAtEvent(errorEvent); // Inject an error at event 42
+    sched.addAlgorithm(algA);
+    sched.addAlgorithm(algB);
+    sched.addAlgorithm(algC);
+    sched.addAlgorithm(algD);
+    sched.addAlgorithm(algE);
+    sched.initSchedulerState();
 
+    NewScheduler::RunStats stats;
+    int nEvents = 100;
+    StatusCode s;
+    s = sched.run(nEvents, stats);
+
+    
+    // Check that all algorithms have been executed for each event
+    auto lockedTracker = MockAlgorithm::getExecutionTracker();
+    auto& executionTracker = lockedTracker.tracker;
+    for (int eventNum = 0; eventNum < errorEvent; ++eventNum) {
+        for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
+            auto it = executionTracker.find({eventNum, algNum});
+            ASSERT_NE(it, executionTracker.end()) << "Algorithm " << algNum 
+                << " was not executed for event " << eventNum;
+        }
+    }
+    for(std::size_t algNum = 0; algNum <= errorAlgorithm; ++algNum) {
+        auto it = executionTracker.find({errorEvent, algNum});
+        ASSERT_NE(it, executionTracker.end()) << "Algorithm " << algNum 
+            << " was not executed for event " << errorEvent;
+    }
+    for(std::size_t algNum = errorAlgorithm + 1; algNum < sched.m_algorithms.size(); ++algNum) {
+        auto it = executionTracker.find({errorEvent, algNum});
+        ASSERT_EQ(it, executionTracker.end()) << "Algorithm " << algNum 
+            << " was executed for event " << errorEvent;
+    }
+    for (int eventNum = errorEvent + 1; eventNum < nEvents; ++eventNum) {
+        for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
+            auto it = executionTracker.find({eventNum, algNum});
+            ASSERT_EQ(it, executionTracker.end()) << "Algorithm " << algNum 
+                << " was executed for event " << eventNum;
+        }
+    }
+}
 

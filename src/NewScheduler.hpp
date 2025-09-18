@@ -280,6 +280,12 @@ private:
     */
    std::vector<std::thread> m_workerThreads;
 
+   /// @brief Abort flag to signal all threads to stop processing.
+   std::atomic_bool m_abort = false;
+
+   /// @brief Function to print the status of the scheduler and slots (for debugging).
+   void printStatus() const;
+
 public:
 
    static std::string to_string(ExecutionStrategy strategy) {

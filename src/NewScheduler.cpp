@@ -180,10 +180,17 @@ void NewScheduler::processRunQueue() {
 }
 
 void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
+  // std::size_t functionRecycles = 0;
   begin:
+  if(m_abort) return;
+  // if (functionRecycles++) {
+  //   std::cout << "Recycle(" << functionRecycles << ") ";
+  // }
+
   // std::cout << "Processing request: slot=" << req.slot << ", alg=" << req.alg << ", type=" 
   //           << (req.type == NewRunQueue::ActionRequest::ActionType::Start ? "Start" : 
-  //               req.type == NewRunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit");
+  //               req.type == NewRunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit")
+  //           << std::endl;
   // Validate the request.
   if (req.slot < 0 || req.slot >= m_eventSlotsNumber) {
     throw RuntimeError("In NewScheduler::processActionRequest(): Invalid slot index");
@@ -283,10 +290,19 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
       done = true;
   }
 
-  // If anything went wrong, crash and burn.
-  // TODO: be more subtle.
+  // If anything went wrong, set the abort flag and inject termination requests in the run queue.
   if (!algStatus) {
-    abort();
+    m_abort = true;
+    std::cerr << "In NewScheduler::processActionRequest(): Algorithm " << req.alg 
+              << " in slot " << req.slot << " for event " << slot.eventNumber 
+              << " returned error status. Aborting run." << std::endl;
+    for (int i = 0; i < m_threadsNumber; ++i) {
+      NewRunQueue::ActionRequest exitReq{NewRunQueue::ActionRequest::ActionType::Exit, -1,
+        std::numeric_limits<std::size_t>::max(), true};
+      m_runQueue.queue.push(exitReq);
+    }
+    printStatus();
+    return;
   }
 
   // We are done with the algorithm for now.
@@ -333,4 +349,32 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
       goto begin;
     }
   }
+}
+
+void NewScheduler::printStatus() const {
+    std::cout << "Scheduler Status:" << std::endl;
+    std::cout << "  Threads: " << m_threadsNumber << std::endl;
+    std::cout << "  Slots: " << m_eventSlotsNumber << std::endl;
+    std::cout << "  Next Event ID: " << m_nextEventId.load() << std::endl;
+    std::cout << "  Target Event ID: " << m_targetEventId << std::endl;
+    std::cout << "  Remaining Events to Complete: " << m_remainingEventsToComplete.load() << std::endl;
+    std::cout << "  Algorithms: " << m_algorithms.size() << std::endl;
+    std::cout << "  Execution Strategy: " << to_string(m_executionStrategy) << std::endl;
+    std::cout << "  Abort Flag: " << m_abort.load() << std::endl;
+    for (int i = 0; i < m_eventSlotsNumber; ++i) {
+        const auto& slot = m_eventSlots[i];
+        std::cout << "  Slot " << i << ": Event " << slot.eventNumber << std::endl;
+        for (std::size_t j = 0; j < slot.algorithms.size(); ++j) {
+            const auto& alg = slot.algorithms[j];
+            std::cout << "    Algorithm " << j << ": ";
+            if (alg.coroutine.empty()) {
+                std::cout << "Not started";
+            } else if (alg.coroutine.isResumable()) {
+                std::cout << "Resumable";
+            } else {
+                std::cout << "Completed";
+            }
+            std::cout << std::endl;
+        }
+    }
 }

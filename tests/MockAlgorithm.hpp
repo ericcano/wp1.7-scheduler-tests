@@ -44,6 +44,11 @@ public:
         static ExecutionTracker executionTracker;
         return {std::scoped_lock<std::mutex>(mutex), executionTracker};
     }
+
+    static void clear() {
+        auto lockedTracker = getExecutionTracker();
+        lockedTracker.tracker.clear();
+    }
     
     // Inject errors,
     private:

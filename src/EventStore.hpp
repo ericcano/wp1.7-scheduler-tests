@@ -90,15 +90,15 @@ public:
 
    // Move constructor
    EventStore(EventStore&& other) noexcept {
-      std::unique_lock<std::shared_mutex> lock(other.m_globalMutex); // Lock the source's global mutex
+      std::unique_lock<std::shared_mutex> lock(other.m_mutex); // Lock the source's global mutex
       m_store = std::move(other.m_store);
    }
 
    // Move assignment operator
    EventStore& operator=(EventStore&& other) noexcept {
       if (this != &other) {
-         std::unique_lock<std::shared_mutex> lockThis(m_globalMutex, std::defer_lock);
-         std::unique_lock<std::shared_mutex> lockOther(other.m_globalMutex, std::defer_lock);
+         std::unique_lock<std::shared_mutex> lockThis(m_mutex, std::defer_lock);
+         std::unique_lock<std::shared_mutex> lockOther(other.m_mutex, std::defer_lock);
          std::lock(lockThis, lockOther); // Lock both mutexes
          m_store = std::move(other.m_store);
       }
@@ -113,7 +113,7 @@ public:
     */
    template <typename T>
    bool contains(const std::string& name) const {
-      std::shared_lock<std::shared_mutex> globalLock(m_globalMutex); // Shared lock for map access
+      std::shared_lock<std::shared_mutex> globalLock(m_mutex); // Shared lock for map access
       auto it = m_store.find(name);
       if (it == m_store.end()) {
          return false;
@@ -131,7 +131,7 @@ public:
     */
    template <typename T>
    StatusCode retrieve(const T*& obj, const std::string& name) {
-      std::shared_lock<std::shared_mutex> globalLock(m_globalMutex); // Shared lock for map access
+      std::shared_lock<std::shared_mutex> sharedLock(m_mutex); // Shared lock for map access
       auto it = m_store.find(name);
       if (it == m_store.end()) {
          return StatusCode::FAILURE;
@@ -153,7 +153,7 @@ public:
     */
    template <typename T>
    StatusCode record(std::unique_ptr<T>&& obj, const std::string& name) {
-      std::unique_lock<std::shared_mutex> globalLock(m_globalMutex); // Exclusive lock for map modification
+      std::unique_lock<std::shared_mutex> uniqueLock(m_mutex); // Exclusive lock for map modification
       auto it = m_store.find(name);
       if (it != m_store.end()) {
          return StatusCode::FAILURE;
@@ -169,12 +169,12 @@ public:
     * @brief Clears the store and deletes all the products.
     */
    void clear() {
-      std::unique_lock<std::shared_mutex> globalLock(m_globalMutex); // Exclusive lock for map modification
+      std::unique_lock<std::shared_mutex> uniqueLock(m_mutex); // Exclusive lock for map modification
       m_store.clear();
    }
 
 private:
-   mutable std::shared_mutex m_globalMutex; // Global lock for the map
+   mutable std::shared_mutex m_mutex; // Global lock for the map
    std::map<KeyType, ValueType> m_store;    // The map storing the elements with their associated mutexes
 };
 

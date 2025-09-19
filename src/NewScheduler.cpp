@@ -216,7 +216,7 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
   auto& algSlot = slot.algorithms[req.alg];
 
   // Lock the algorithm mutex to ensure only one thread runs the algorithm's coroutine at a time.
-  std::lock_guard<std::mutex> algLock(algSlot.mutex);
+  std::unique_lock<std::mutex> algLock(algSlot.mutex);
 
   // If the request is to start, ensure the algorithm has not already run for this event.
   if (req.type == NewRunQueue::ActionRequest::ActionType::Start) {
@@ -319,13 +319,13 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
   }
 
   // We are done with the algorithm for now.
-  algLock.~lock_guard();
+  algLock.unlock();
 
   // If an algorithm completed, there might be more to execute.
   if (done) {
     // Algorithm finished processing for this event.
     // Lock the slot mutex to safely check overall slot state.
-    std::lock_guard<std::mutex> slotLock(slot.schedulingMutex);
+    std::unique_lock<std::mutex> slotLock(slot.schedulingMutex);
     // TODO: error handling
     std::ignore = slot.eventContentManager.setAlgExecuted(req.alg, m_algoDependencyMap);
     // Get the list of dependent algorithms that might now be ready to run.
@@ -345,19 +345,18 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
         // Schedule the next event if available.
         auto nextReq = scheduleNextEventInSlot(slot);
         if (nextReq.exit) return;
-        slotLock.~lock_guard();
+        slotLock.unlock();
         req = nextReq;
         // std::cout << "GOTO on next event ";
         goto begin;
       }
     } else {
-      slotLock.~lock_guard();
+      slotLock.unlock();
       req = {NewRunQueue::ActionRequest::ActionType::Start, req.slot, dependents[0], false};
       for (std::size_t i = 1; i < dependents.size(); ++i) {
         NewRunQueue::ActionRequest depReq{NewRunQueue::ActionRequest::ActionType::Start, req.slot, dependents[i], false};
         m_runQueue.queue.push(depReq);
       }
-      algLock.~lock_guard();
       // std::cout << "GOTO on dependent ";
       goto begin;
     }

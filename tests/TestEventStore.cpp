@@ -10,6 +10,10 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
+#include <vector>
+#include <atomic>
+#include <format>   
 
 #include "EventStore.hpp"
 #include "StatusCode.hpp"
@@ -89,6 +93,43 @@ TEST_F(EventStoreTest, RecordRepeat) {
 TEST_F(EventStoreTest, RecordRepeatFail) {
     run_record_repeat_fail<int>(defaultName);
 }
+
+TEST_F(EventStoreTest, MultithreadedAccess) {
+    const int numThreads = 8;
+    const int numIterations = 1000;
+    std::atomic<int> successCount{0};
+
+    auto threadFunc = [&]() {
+        for (int i = 0; i < numIterations; ++i) {
+            // Record an object to be accessed on the next iteration
+            std::stringstream ss;
+            ss << std::this_thread::get_id();
+            std::string threadObjectName = "ThreadObject_" + ss.str() + "_" + std::to_string(i);
+            auto stat = store.record(std::make_unique<int>(i), threadObjectName);
+            assert(stat); // Should always succeed
+            const int* retrievedValue = nullptr;
+            if (store.retrieve(retrievedValue, threadObjectName)) {
+                EXPECT_EQ(*retrievedValue, i);
+                successCount.fetch_add(1, std::memory_order_relaxed);
+            }
+        }
+    };
+
+    // Launch multiple threads
+    std::vector<std::thread> threads;
+    for (int i = 0; i < numThreads; ++i) {
+        threads.emplace_back(threadFunc);
+    }
+
+    // Join all threads
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Verify that all threads successfully retrieved the object
+    EXPECT_EQ(successCount.load(), numThreads * numIterations);
+}
+
 
 // Standard gtest main
 int main(int argc, char** argv) {

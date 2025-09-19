@@ -4,11 +4,13 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <format>
 
 /**
  * @brief A mock algorithm for testing purposes. Records algorithm execution. Can inject errors.
  */
 class MockAlgorithm : public NewAlgorithmBase {
+friend class MockSuspendingAlgorithm; // Allow the suspending variant to access private members
 public:
     MockAlgorithm(const std::vector<std::string>& dependencies,
                  const std::vector<std::string>& products) {
@@ -23,6 +25,20 @@ public:
     }
     StatusCode initialize() override { return StatusCode::SUCCESS; }
     AlgCoInterface execute(NewAlgoContext& ctx) const override {
+        // Get hold of the dependencies
+        for (const auto& dep : dependencies()) {
+            const int* input = nullptr;
+            SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dep));
+            // std::cout << std::format("MockAlgorithm event {}, alg {} retrieved dependency {} with value {}\n", ctx.eventNumber, ctx.algorithmNumber, dep, *input);
+            (void)input; // Suppress unused variable warning
+        }
+        // Produce the products
+        for (const auto& prod : products()) {
+            auto output = std::make_unique<int>(-1);
+            // std::cout << std::format("MockAlgorithm event {}, alg {} recording product {}\n", ctx.eventNumber, ctx.algorithmNumber, prod);
+            SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), prod));
+        }
+        // Record the execution
         getExecutionTracker().tracker.insert({ctx.eventNumber, ctx.algorithmNumber});
         if (ctx.eventNumber == m_injectErrorAtEvent) {
             co_return StatusCode::FAILURE;
@@ -58,4 +74,36 @@ public:
     void setInjectErrorAtEvent(std::size_t event) { m_injectErrorAtEvent = event; }
 
     // TODO: add event store interface.
+};
+
+class MockSuspendingAlgorithm : public MockAlgorithm {
+public:
+    using MockAlgorithm::MockAlgorithm;
+    AlgCoInterface execute(NewAlgoContext& ctx) const override {
+        // Get hold of the dependencies
+        for (const auto& dep : dependencies()) {
+            const int* input = nullptr;
+            SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dep));
+            // std::cout << std::format("MockSuspendingAlgorithm event {}, alg {} retrieved dependency {} with value {}\n", ctx.eventNumber, ctx.algorithmNumber, dep, *input);
+            (void)input; // Suppress unused variable warning
+        }
+        // Already inject resumption here (simulate CUDA callback)
+        auto *c = new NewAlgoContext{ctx};
+        NewAlgoContext::newScheduleResumeCallback(c);
+        // Simulate suspension
+        co_yield StatusCode::SUCCESS;
+        // Produce the products
+        for (const auto& prod : products()) {
+            auto output = std::make_unique<int>(-1);
+            // std::cout << std::format("MockSuspendingAlgorithm event {}, alg {} recording product {}\n", ctx.eventNumber, ctx.algorithmNumber, prod);
+            SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), prod));
+        }
+        // Record the execution
+       getExecutionTracker().tracker.insert({ctx.eventNumber, ctx.algorithmNumber});
+       if (ctx.eventNumber == m_injectErrorAtEvent) {
+           co_return StatusCode::FAILURE;
+       }
+       co_return {};
+    }
+
 };

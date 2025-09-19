@@ -125,6 +125,39 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
     }
 }
 
+TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
+    MockAlgorithm::clear();
+    NewScheduler sched(2,2);
+    MockSuspendingAlgorithm algA{{}, {"prodA"}};
+    MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
+    MockSuspendingAlgorithm algC{{"prodA"}, {"prodC"}};
+    MockAlgorithm algD{{"prodC"}, {"prodD"}};
+    MockSuspendingAlgorithm algE{{"prodC", "prodD"}, {"prodE"}};
+    sched.addAlgorithm(algA);
+    sched.addAlgorithm(algB);
+    sched.addAlgorithm(algC);
+    sched.addAlgorithm(algD);
+    sched.addAlgorithm(algE);
+    sched.initSchedulerState();
+
+    NewScheduler::RunStats stats;
+    int nEvents = 100;
+    StatusCode s;
+    s = sched.run(nEvents, stats);
+
+    
+    // Check that all algorithms have been executed for each event
+    auto lockedTracker = MockAlgorithm::getExecutionTracker();
+    auto& executionTracker = lockedTracker.tracker;
+    for (int eventNum = 0; eventNum < nEvents; ++eventNum) {
+        for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
+            auto it = executionTracker.find({eventNum, algNum});
+            ASSERT_NE(it, executionTracker.end()) << "Algorithm " << algNum 
+                << " was not executed for event " << eventNum;
+        }
+    }
+}
+
 TEST(NewSchedulerTest, scheduleEventLinearWithError) {
     MockAlgorithm::clear();
     NewScheduler sched(1,1);

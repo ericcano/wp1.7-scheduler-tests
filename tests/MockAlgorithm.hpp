@@ -6,6 +6,8 @@
 #include <cassert>
 #include <format>
 
+#pragma GCC optimize("O0")
+
 /**
  * @brief A mock algorithm for testing purposes. Records algorithm execution. Can inject errors.
  */
@@ -24,11 +26,11 @@ public:
         }
     }
     StatusCode initialize() override { return StatusCode::SUCCESS; }
-    AlgCoInterface execute(NewAlgoContext& ctx) const override {
+    AlgCoInterface execute(NewAlgoContext ctx) const override {
         // Get hold of the dependencies
         for (const auto& dep : dependencies()) {
             const int* input = nullptr;
-            SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dep));
+            SC_CHECK_CO_RETURN(ctx.eventStore.retrieve(input, dep));
             // std::cout << std::format("MockAlgorithm event {}, alg {} retrieved dependency {} with value {}\n", ctx.eventNumber, ctx.algorithmNumber, dep, *input);
             (void)input; // Suppress unused variable warning
         }
@@ -36,7 +38,7 @@ public:
         for (const auto& prod : products()) {
             auto output = std::make_unique<int>(-1);
             // std::cout << std::format("MockAlgorithm event {}, alg {} recording product {}\n", ctx.eventNumber, ctx.algorithmNumber, prod);
-            SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), prod));
+            SC_CHECK_CO_RETURN(ctx.eventStore.record(std::move(output), prod));
         }
         // Record the execution
         getExecutionTracker().tracker.insert({ctx.eventNumber, ctx.algorithmNumber});
@@ -79,11 +81,11 @@ public:
 class MockSuspendingAlgorithm : public MockAlgorithm {
 public:
     using MockAlgorithm::MockAlgorithm;
-    AlgCoInterface execute(NewAlgoContext& ctx) const override {
+    AlgCoInterface execute(NewAlgoContext ctx) const override {
         // Get hold of the dependencies
         for (const auto& dep : dependencies()) {
             const int* input = nullptr;
-            SC_CHECK_YIELD(ctx.eventStore.retrieve(input, dep));
+            SC_CHECK_CO_RETURN(ctx.eventStore.retrieve(input, dep));
             // std::cout << std::format("MockSuspendingAlgorithm event {}, alg {} retrieved dependency {} with value {}\n", ctx.eventNumber, ctx.algorithmNumber, dep, *input);
             (void)input; // Suppress unused variable warning
         }
@@ -96,7 +98,7 @@ public:
         for (const auto& prod : products()) {
             auto output = std::make_unique<int>(-1);
             // std::cout << std::format("MockSuspendingAlgorithm event {}, alg {} recording product {}\n", ctx.eventNumber, ctx.algorithmNumber, prod);
-            SC_CHECK_YIELD(ctx.eventStore.record(std::move(output), prod));
+            SC_CHECK_CO_RETURN(ctx.eventStore.record(std::move(output), prod));
         }
         // Record the execution
        getExecutionTracker().tracker.insert({ctx.eventNumber, ctx.algorithmNumber});

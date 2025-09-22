@@ -78,7 +78,7 @@ StatusCode ThirdAlgorithm::initialize() {
     return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::execute(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::execute(NewAlgoContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -103,7 +103,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::execute(NewAlgoContext& ctx) co
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightMutexed(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightMutexed(NewAlgoContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -130,7 +130,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightMutexed(NewAlgoC
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalStreams(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalStreams(NewAlgoContext ctx) const {
     auto stream = CUDAThreadLocalStream::get();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -156,7 +156,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalStrea
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalContext(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalContext(NewAlgoContext ctx) const {
     CUDAThreadLocalContext::check();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -182,7 +182,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalConte
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraph(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraph(NewAlgoContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -206,7 +206,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraph(NewAlgoContext& ct
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraphFullyDelegated(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraphFullyDelegated(NewAlgoContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -233,7 +233,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraphFullyDelegated(NewA
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightDelegated(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightDelegated(NewAlgoContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -261,7 +261,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightDelegated(NewAlg
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraph(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraph(NewAlgoContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -285,7 +285,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraph(NewAlgoConte
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraphDelegated(NewAlgoContext& ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraphDelegated(NewAlgoContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }

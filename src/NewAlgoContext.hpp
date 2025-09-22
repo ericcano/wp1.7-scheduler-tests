@@ -22,6 +22,19 @@ struct NewAlgoContext {
    EventStore& eventStore;
    cudaStream_t stream;
 
+   // Member by member constructor
+   NewAlgoContext(int eventNumber, int slotNumber, std::size_t algorithmNumber,
+                  NewScheduler& scheduler, EventStore& eventStore, cudaStream_t stream)
+       : eventNumber(eventNumber),
+         slotNumber(slotNumber),
+         algorithmNumber(algorithmNumber),
+         scheduler(scheduler),
+         eventStore(eventStore),
+         stream(stream) {}
+
+   // Copy constructor
+   NewAlgoContext(const NewAlgoContext&) = default;
+
    std::string info() const {
       return "ctx.eventNumber = " + std::to_string(this->eventNumber)
            + ", ctx.slotNumber = " + std::to_string(this->slotNumber)

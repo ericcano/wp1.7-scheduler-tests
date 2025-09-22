@@ -41,6 +41,12 @@ void NewScheduler::initSchedulerState()  {
   // First, populate the algorithm dependency map with the algorithms.
   new(&m_algoDependencyMap) NewAlgoDependencyMap(m_algorithms);
 
+  // Initialize all the algorithms.
+  if (StatusCode status = NewAlgorithmBase::for_all(m_algorithms, &NewAlgorithmBase::initialize);
+      !status) {
+     throw RuntimeError(std::string("In NewScheduler::initSchedulerState(): Algorithm initialization failed: ") + status.what());
+  }
+
   // Then, create the event slots. The event slots are assigned an event number
   // in all cases, even if the event is above target and the slot will be active.
   // It will possibly be in subsequent runs.
@@ -243,13 +249,14 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
     }
     assert(algSlot.coroutine.empty());
     auto & alg = m_algorithms[req.alg].get();
+    // Create the algorithm context, using the member-by-member constructor.
     NewAlgoContext ctx{
-      .eventNumber = slot.eventNumber,
-      .slotNumber = req.slot,
-      .algorithmNumber = req.alg,
-      .scheduler = *this,
-      .eventStore = slot.eventStore,
-      .stream = slot.stream
+      slot.eventNumber,
+      req.slot,
+      req.alg,
+      *this,
+      slot.eventStore,
+      slot.stream
     };
     switch (m_executionStrategy)
     {

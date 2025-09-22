@@ -13,6 +13,8 @@
 #include "EventContext.hpp"
 #include "StatusCode.hpp"
 
+#pragma GCC optimize("O0")
+
 /**
  * @brief And `std::any`-style container for unique pointer (abstract base class).
  */

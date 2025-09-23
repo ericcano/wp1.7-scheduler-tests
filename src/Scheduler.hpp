@@ -8,7 +8,7 @@
 #include <ranges>
 #include <tbb/concurrent_queue.h>
 #include <cuda_runtime_api.h>
-#include "NewAlgorithmBase.hpp"
+#include "AlgorithmBase.hpp"
 #include "NewEventContentManager.hpp"
 #include "EventStore.hpp"
 

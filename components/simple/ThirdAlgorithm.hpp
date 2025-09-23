@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NewAlgorithmBase.hpp"
+#include "AlgorithmBase.hpp"
 #include "CachingGraphContainer.hpp"
 
 #include <cuda_runtime_api.h>

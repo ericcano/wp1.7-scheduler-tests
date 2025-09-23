@@ -1,4 +1,4 @@
-#include "NewAlgorithmBase.hpp"
+#include "AlgorithmBase.hpp"
 
 AlgorithmBase::AlgCoInterface AlgorithmBase::executeStraight(AlgorithmContext ctx) const {
   auto exec = execute(ctx);

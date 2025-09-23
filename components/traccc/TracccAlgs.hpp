@@ -13,7 +13,7 @@
 #include <traccc/seeding/track_params_estimation.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
-#include "NewAlgorithmBase.hpp"
+#include "AlgorithmBase.hpp"
 
 // Unique pointer members are moved insides execute. Not re-entrant.
 class TracccCellsAlgorithm : public AlgorithmBase {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NewAlgorithmBase.hpp"
+#include "AlgorithmBase.hpp"
 
 #include <detray/detectors/bfield.hpp>
 #include <detray/navigation/navigator.hpp>

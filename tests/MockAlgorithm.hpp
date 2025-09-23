@@ -1,5 +1,5 @@
 #pragma once
-#include "NewAlgorithmBase.hpp"
+#include "AlgorithmBase.hpp"
 #include <vector>
 #include <string>
 #include <cassert>

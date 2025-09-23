@@ -6,7 +6,7 @@
 #include <ostream>
 #include <set>
 
-#include "NewAlgorithmBase.hpp"
+#include "AlgorithmBase.hpp"
 #include "StatusCode.hpp"
 
 

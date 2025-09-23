@@ -8,7 +8,6 @@
 #include "EventContext.hpp"
 #include "EventStore.hpp"
 #include "MemberFunctionName.hpp"
-#include "Scheduler.hpp"
 #include "CUDAThread.hpp"
 #include "CUDAMutex.hpp"
 #include "CUDAThreadLocalStream.hpp"
@@ -84,12 +83,13 @@ void FirstAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, NewAlgoConte
 // --- FirstAlgorithm Implementation ---
 
 FirstAlgorithm::FirstAlgorithm(bool errorEnabled, int errorEventId, bool verbose)
-    : m_errorEnabled(errorEnabled), m_errorEventId(errorEventId), m_verbose(verbose) {}
+    : m_errorEnabled(errorEnabled), m_errorEventId(errorEventId), m_verbose(verbose) {
+        std::ignore = addProduct<int>("Object1");
+        std::ignore = addProduct<int>("Object2");
+    }
 
 StatusCode FirstAlgorithm::initialize() {
     nvtx3::scoped_range range{MEMBER_FUNCTION_NAME(FirstAlgorithm)};
-    SC_CHECK(addProduct<int>("Object1"));
-    SC_CHECK(addProduct<int>("Object2"));
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) << std::endl;
     }

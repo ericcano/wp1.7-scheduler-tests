@@ -69,9 +69,19 @@ public:
    NewScheduler& operator=(const NewScheduler&) = delete;
 
    /**
-    * @brief Destructor just cleans up the CUDA streams.
+    * @brief Finalizes all algorithms. This should be called after by user after running, as object destruction
+    * order is not guaranteed for scheduler and algorithms.
+    * @return StatusCode indicating success or failure.
+    */
+   StatusCode finalizeAlgorithms() {
+      return NewAlgorithmBase::for_all(m_algorithms, &NewAlgorithmBase::finalize);
+   }
+
+   /**
+    * @brief Destructor is empty.
     */
    ~NewScheduler() {}
+
 
    /** 
     * @brief Adds an algorithm to the algorithm list. This function should be called before running. 

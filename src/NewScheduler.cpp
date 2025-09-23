@@ -85,7 +85,7 @@ StatusCode NewScheduler::run(int eventsToProcess, RunStats& stats) {
 
   //std::cout << "Processed " << m_events << " events in " << duration << " ms (" << rate << " events/sec)" << std::endl;
 
-  return StatusCode::SUCCESS;
+  return m_abort?StatusCode::FAILURE: StatusCode::SUCCESS;
 }
 
 
@@ -136,14 +136,16 @@ NewScheduler::NewRunQueue::ActionRequest NewScheduler::scheduleNextEventInSlot(N
   // If we completed the last event, we need to signal the worker threads to exit.
   if (m_remainingEventsToComplete.fetch_sub(1) == 1) {
     for (int i = 0; i < m_threadsNumber; ++i) {
+      // std::cout << "Pushing exit request to run queue for worker thread " << i << std::endl;
       NewRunQueue::ActionRequest exitReq{NewRunQueue::ActionRequest::ActionType::Exit, -1,
         std::numeric_limits<std::size_t>::max(), true};
       m_runQueue.queue.push(exitReq);
     }
   }
-  // Did we reach the target event number. In this case, we do not need to schedule it.
+  // Did we reach the target event number? In this case, we do not need to schedule it.
+  // This return value signals to the caller that no scheduling was done.
   if (slot.eventNumber >= m_targetEventId) {
-    return NewRunQueue::ActionRequest{NewRunQueue::ActionRequest::ActionType::Exit, 0, 0, true};
+     return NewRunQueue::ActionRequest{NewRunQueue::ActionRequest::ActionType::Exit, 0, 0, true};
   }
   // We will schedule this event's first algos.
   NewRunQueue::ActionRequest firstReq;
@@ -190,6 +192,10 @@ void NewScheduler::processRunQueue() {
       if (req.exit) {
         break; // Exit signal received
       }
+      // std::cout << "Processing request from queue: slot=" << req.slot << ", alg=" << req.alg << ", type=" 
+      //           << (req.type == NewRunQueue::ActionRequest::ActionType::Start ? "Start" : 
+      //               req.type == NewRunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit")
+      //           << std::endl;
       processActionRequest(req);
     } else {
       // If no work is available, yield to avoid busy-waiting
@@ -295,6 +301,16 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
           abort();
     }
   } else if(req.type == NewRunQueue::ActionRequest::ActionType::Resume) {
+    if (algSlot.coroutine.empty()) {
+      // std::cerr << "In NewScheduler::processActionRequest(): Attempting to resume an algorithm that has not been started for this event." << std::endl;
+      // std::cerr << "Request: slot=" << req.slot << ", alg=" << req.alg << std::endl;
+      throw RuntimeError("In NewScheduler::processActionRequest(): Attempting to resume an algorithm that has not been started for this event");
+    }
+    if (algSlot.coroutine.empty() || !algSlot.coroutine.isResumable()) {
+      // std::cerr << "In NewScheduler::processActionRequest(): Attempting to resume an algorithm that is not resumable." << std::endl;
+      // std::cerr << "Request: slot=" << req.slot << ", alg=" << req.alg << std::endl;
+      throw RuntimeError("In NewScheduler::processActionRequest(): Attempting to resume an algorithm that is not resumable");
+    }
     algSlot.coroutine.resume();
   } else {
     throw RuntimeError("In NewScheduler::processActionRequest(): Unexpected action request type");
@@ -350,11 +366,13 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
       }
       if (allDone) {
         // Schedule the next event if available.
+        // std::cout << "Event " << slot.eventNumber << " completed." << std::endl;
         auto nextReq = scheduleNextEventInSlot(slot);
         if (nextReq.exit) return;
         slotLock.unlock();
         req = nextReq;
         // std::cout << "GOTO on next event ";
+        // std::cout << "Immediately running algorithm " << req.alg << " in slot " << req.slot << " for event " << slot.eventNumber << std::endl;
         goto begin;
       }
     } else {
@@ -365,6 +383,7 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
         m_runQueue.queue.push(depReq);
       }
       // std::cout << "GOTO on dependent ";
+      // std::cout << "Immediately running dependent algorithm " << req.alg << " in slot " << req.slot << " for event " << slot.eventNumber << std::endl;
       goto begin;
     }
   }

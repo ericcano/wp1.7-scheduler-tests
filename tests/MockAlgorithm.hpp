@@ -25,8 +25,17 @@ public:
             assert(s);
         }
     }
-    StatusCode initialize() override { return StatusCode::SUCCESS; }
+private:
+    bool m_Initialized = false;
+    bool m_Finalized = false;
+public:
+    StatusCode initialize() override { 
+        assert (!m_Initialized);
+        m_Initialized = true;
+        return StatusCode::SUCCESS; 
+    }
     AlgCoInterface execute(NewAlgoContext ctx) const override {
+        assert (m_Initialized);
         // Get hold of the dependencies
         for (const auto& dep : dependencies()) {
             const int* input = nullptr;
@@ -47,7 +56,16 @@ public:
         }
         co_return {}; 
     }
-    StatusCode finalize() override { return StatusCode::SUCCESS; }
+    StatusCode finalize() override {
+        assert (m_Initialized);
+        assert (!m_Finalized);
+        m_Finalized = true;
+        return StatusCode::SUCCESS;
+    }
+
+    ~MockAlgorithm() {
+        assert (!m_Initialized || m_Finalized);
+    }
 
     // A record of the executed algorithms
     using ExecutionTracker = std::set<std::tuple<int, std::size_t>>;

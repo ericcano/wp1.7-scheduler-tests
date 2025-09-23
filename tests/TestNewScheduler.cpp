@@ -56,6 +56,8 @@ TEST(NewSchedulerTest, initSchedulerState) {
         // At initialization, eventNumber should be equal to slot index
         ASSERT_EQ(evSlot.eventNumber, i);
     }
+    // We need to finalize the algorithms as they were initialized
+    assert (NewAlgorithmBase::for_all(sched.m_algorithms, &NewAlgorithmBase::finalize));
 }
 
 
@@ -72,7 +74,6 @@ TEST(NewSchedulerTest, scheduleEvent) {
     sched.addAlgorithm(algC);
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
-    sched.initSchedulerState();
 
     NewScheduler::RunStats stats;
     int nEvents = 100;
@@ -90,6 +91,7 @@ TEST(NewSchedulerTest, scheduleEvent) {
                 << " was not executed for event " << eventNum;
         }
     }
+    assert (sched.finalizeAlgorithms());
 }
 
 TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
@@ -105,7 +107,6 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
     sched.addAlgorithm(algC);
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
-    sched.initSchedulerState();
 
     NewScheduler::RunStats stats;
     int nEvents = 100;
@@ -123,11 +124,12 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
                 << " was not executed for event " << eventNum;
         }
     }
+    assert (sched.finalizeAlgorithms());
 }
 
 TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
     MockAlgorithm::clear();
-    NewScheduler sched(2,2);
+    NewScheduler sched(20,40);
     MockSuspendingAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
     MockSuspendingAlgorithm algC{{"prodA"}, {"prodC"}};
@@ -138,14 +140,13 @@ TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
     sched.addAlgorithm(algC);
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
-    sched.initSchedulerState();
 
     NewScheduler::RunStats stats;
     int nEvents = 100;
     StatusCode s;
     s = sched.run(nEvents, stats);
+    assert(s);
 
-    
     // Check that all algorithms have been executed for each event
     auto lockedTracker = MockAlgorithm::getExecutionTracker();
     auto& executionTracker = lockedTracker.tracker;
@@ -155,6 +156,54 @@ TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
             ASSERT_NE(it, executionTracker.end()) << "Algorithm " << algNum 
                 << " was not executed for event " << eventNum;
         }
+    }
+    assert (sched.finalizeAlgorithms());
+}
+
+TEST(NewSchedulerTest, scheduleSuspendingAllStrategies) {
+    using ES = NewScheduler::ExecutionStrategy;
+    for (auto strategy : {ES::SingleLaunch,
+                          ES::StraightLaunches,
+                          ES::StraightDelegated,
+                          ES::StraightMutexed,
+                          ES::StraightThreadLocalStreams,
+                          ES::StraightThreadLocalContext,
+                          ES::Graph,
+                          ES::GraphFullyDelegated,
+                          ES::CachedGraphs,
+                          ES::CachedGraphsDelegated
+                        }) {
+        // std::cout << "Testing strategy: " << NewScheduler::to_string(strategy) << std::endl;
+        MockAlgorithm::clear();
+        NewScheduler sched(20, 40, strategy);
+        MockSuspendingAlgorithm algA{{}, {"prodA"}};
+        MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
+        MockSuspendingAlgorithm algC{{"prodA"}, {"prodC"}};
+        MockAlgorithm algD{{"prodC"}, {"prodD"}};
+        MockSuspendingAlgorithm algE{{"prodC", "prodD"}, {"prodE"}};
+        sched.addAlgorithm(algA);
+        sched.addAlgorithm(algB);
+        sched.addAlgorithm(algC);
+        sched.addAlgorithm(algD);
+        sched.addAlgorithm(algE);
+
+        NewScheduler::RunStats stats;
+        int nEvents = 100;
+        StatusCode s;
+        s = sched.run(nEvents, stats);
+        assert(s);
+
+        // Check that all algorithms have been executed for each event
+        auto lockedTracker = MockAlgorithm::getExecutionTracker();
+        auto& executionTracker = lockedTracker.tracker;
+        for (int eventNum = 0; eventNum < nEvents; ++eventNum) {
+            for (std::size_t algNum = 0; algNum < sched.m_algorithms.size(); ++algNum) {
+                auto it = executionTracker.find({eventNum, algNum});
+                ASSERT_NE(it, executionTracker.end()) << "Algorithm " << algNum 
+                    << " was not executed for event " << eventNum;
+            }
+        }
+        assert (sched.finalizeAlgorithms());
     }
 }
 
@@ -174,7 +223,6 @@ TEST(NewSchedulerTest, scheduleEventLinearWithError) {
     sched.addAlgorithm(algC);
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
-    sched.initSchedulerState();
 
     NewScheduler::RunStats stats;
     int nEvents = 100;
@@ -209,5 +257,6 @@ TEST(NewSchedulerTest, scheduleEventLinearWithError) {
                 << " was executed for event " << eventNum;
         }
     }
+    assert (sched.finalizeAlgorithms());
 }
 

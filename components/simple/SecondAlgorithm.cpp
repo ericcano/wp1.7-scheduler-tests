@@ -8,7 +8,6 @@
 #include "EventContext.hpp"
 #include "EventStore.hpp"
 #include "MemberFunctionName.hpp"
-#include "Scheduler.hpp"
 #include "CUDAThread.hpp"
 #include "CUDAMutex.hpp"
 #include "CUDAThreadLocalStream.hpp"
@@ -82,12 +81,14 @@ void SecondAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, NewAlgoCont
 
 // --- SecondAlgorithm Implementation ---
 SecondAlgorithm::SecondAlgorithm(bool verbose)
-    : m_verbose(verbose) {}
+    : m_verbose(verbose) {
+       // TODO: returen to initialize after changing New algo API
+      std::ignore = addDependency<int>("Object1");
+      std::ignore = addProduct<int>("Object3");
+    }
 
 StatusCode SecondAlgorithm::initialize() {
     nvtx3::scoped_range range{MEMBER_FUNCTION_NAME(SecondAlgorithm)};
-    SC_CHECK(addDependency<int>("Object1"));
-    SC_CHECK(addProduct<int>("Object3"));
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) << std::endl;
     }
@@ -108,7 +109,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(NewAlgoContext ctx) co
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
     launchTestKernel3(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -117,7 +118,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(NewAlgoContext ctx) co
     }
     nvtx3::unique_range range2{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part2" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
     { auto r2 = std::move(range2); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -143,7 +144,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(NewAlgoContext
     }
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -172,7 +173,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(NewAl
     CUDAThread::post([ctx, notif]() {
         launchTestKernel3(ctx.stream);
         launchTestKernel4(ctx.stream);
-        cudaLaunchHostFunc(ctx.stream, notifyScheduler, notif);
+        cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, notif);
     });
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
@@ -200,7 +201,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(NewAlgo
     auto cudaLock = CUDAMutex::lock();
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
     cudaLock.unlock();
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
@@ -228,7 +229,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStre
     }
     launchTestKernel3(stream);
     launchTestKernel4(stream);
-    cudaLaunchHostFunc(stream, notifyScheduler, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -255,7 +256,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalCont
     }
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, notifyScheduler, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 

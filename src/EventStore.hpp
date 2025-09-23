@@ -136,13 +136,24 @@ public:
       std::shared_lock<std::shared_mutex> sharedLock(m_mutex); // Shared lock for map access
       auto it = m_store.find(name);
       if (it == m_store.end()) {
+         // std::cout << "** EventStore::retrieve: Key not found: " << name << " contents: ";
+         // // Dump existing keys for debug
+         // for (const auto& [key, value] : m_store) {
+         //    std::cout<< key << "/type:" << value.value->get_type().name() << " ";
+         // }
+         // std::cout << std::endl;
          return StatusCode::FAILURE;
       }
       std::shared_lock<std::shared_mutex> lock(it->second.mutex); // Lock the element mutex
       if (typeid(T) != it->second.value->get_type()) {
+         // std::cout << "** EventStore::retrieve: Type mismatch for key: " << name 
+         //           << " requested: " << typeid(T).name() 
+         //           << " stored: " << it->second.value->get_type().name() << std::endl;
          return StatusCode::FAILURE;
       }
       obj = static_cast<const T*>(it->second.value->get_pointer());
+      // std::cout << "-- EventStore::retrieve: Retrieved key: " << name 
+      //           << " of type: " << it->second.value->get_type().name() << std::endl;
       return StatusCode::SUCCESS;
    }
 
@@ -158,12 +169,15 @@ public:
       std::unique_lock<std::shared_mutex> uniqueLock(m_mutex); // Exclusive lock for map modification
       auto it = m_store.find(name);
       if (it != m_store.end()) {
+         std::cout << "** EventStore::record: Key already exists: " << name << std::endl;
          return StatusCode::FAILURE;
       }
 
       ValueWithMutex newValue;
       newValue.value = std::make_unique<ObjectHolder<T>>(std::move(obj));
       m_store[name] = std::move(newValue);
+      // std::cout << "-- EventStore::record: Recorded key: " << name 
+      //           << " of type: " << typeid(T).name() << std::endl;
       return StatusCode::SUCCESS;
    }
 
@@ -173,6 +187,7 @@ public:
    void clear() {
       std::unique_lock<std::shared_mutex> uniqueLock(m_mutex); // Exclusive lock for map modification
       m_store.clear();
+      // std::cout << "   EventStore::clear: Store cleared." << std::endl;
    }
 
 private:

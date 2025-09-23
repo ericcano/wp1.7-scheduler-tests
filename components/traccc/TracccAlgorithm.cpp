@@ -30,7 +30,7 @@ StatusCode TracccAlgorithm::initialize() {
 }
 
 
-NewAlgorithmBase::AlgCoInterface TracccAlgorithm::execute(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface TracccAlgorithm::execute(AlgorithmContext ctx) const {
    const auto& cells = m_cells[ctx.eventNumber % m_numEvents];
    std::cout << "Event number: " << ctx.eventNumber << std::endl;
    std::cout << "Size of cells: " << cells.size() << std::endl;

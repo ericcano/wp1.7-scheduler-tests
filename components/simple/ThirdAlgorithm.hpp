@@ -12,8 +12,8 @@ class ThirdAlgorithmGraph {
 public:
     ThirdAlgorithmGraph();
     ~ThirdAlgorithmGraph();
-    void launchGraph(cudaStream_t stream, NewAlgoContext* context);
-    void launchGraphDelegated(cudaStream_t stream, NewAlgoContext* context);
+    void launchGraph(cudaStream_t stream, AlgorithmContext* context);
+    void launchGraphDelegated(cudaStream_t stream, AlgorithmContext* context);
 private:
     cudaGraph_t m_graph{};
     cudaGraphExec_t m_graphExec{};
@@ -30,16 +30,16 @@ public:
     explicit ThirdAlgorithm(bool verbose = false);
 
     StatusCode initialize() override;
-    AlgCoInterface execute(NewAlgoContext ctx) const override;
+    AlgCoInterface execute(AlgorithmContext ctx) const override;
     // Exceute straight is identical to execute (it will fall back to execute())
-    AlgCoInterface executeStraightDelegated(NewAlgoContext ctx) const override;
-    AlgCoInterface executeStraightMutexed(NewAlgoContext ctx) const override;
-    AlgCoInterface executeStraightThreadLocalStreams(NewAlgoContext ctx) const override;
-    AlgCoInterface executeStraightThreadLocalContext(NewAlgoContext ctx) const override;
-    AlgCoInterface executeGraph(NewAlgoContext ctx) const override;
-    AlgCoInterface executeGraphFullyDelegated(NewAlgoContext ctx) const override;
-    AlgCoInterface executeCachedGraph(NewAlgoContext ctx) const override;
-    AlgCoInterface executeCachedGraphDelegated(NewAlgoContext ctx) const override;
+    AlgCoInterface executeStraightDelegated(AlgorithmContext ctx) const override;
+    AlgCoInterface executeStraightMutexed(AlgorithmContext ctx) const override;
+    AlgCoInterface executeStraightThreadLocalStreams(AlgorithmContext ctx) const override;
+    AlgCoInterface executeStraightThreadLocalContext(AlgorithmContext ctx) const override;
+    AlgCoInterface executeGraph(AlgorithmContext ctx) const override;
+    AlgCoInterface executeGraphFullyDelegated(AlgorithmContext ctx) const override;
+    AlgCoInterface executeCachedGraph(AlgorithmContext ctx) const override;
+    AlgCoInterface executeCachedGraphDelegated(AlgorithmContext ctx) const override;
     StatusCode finalize() override;
 
 private:

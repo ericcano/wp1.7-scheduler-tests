@@ -38,7 +38,7 @@ SecondAlgorithmGraph::SecondAlgorithmGraph() {
     m_kernel4Params.extra = nullptr;
     CUDA_ASSERT(cudaGraphAddKernelNode(&m_kernel4Node, m_graph, &m_kernel3Node, 1, &m_kernel4Params));
     
-    m_hostFunctionParams.fn = NewAlgoContext::newScheduleResumeCallback;
+    m_hostFunctionParams.fn = AlgorithmContext::newScheduleResumeCallback;
     m_hostFunctionParams.userData = nullptr;
     CUDA_ASSERT(cudaGraphAddHostNode(&m_HostFunctionNode, m_graph, &m_kernel4Node, 1, &m_hostFunctionParams));
     
@@ -51,7 +51,7 @@ SecondAlgorithmGraph::~SecondAlgorithmGraph() {
     if (m_graph) cudaGraphDestroy(m_graph);
 }
 
-void SecondAlgorithmGraph::launchGraph(cudaStream_t stream, NewAlgoContext* notification) {
+void SecondAlgorithmGraph::launchGraph(cudaStream_t stream, AlgorithmContext* notification) {
     std::lock_guard<std::mutex> lock(m_graphMutex);
 
     // Only update host function userData for this launch
@@ -61,7 +61,7 @@ void SecondAlgorithmGraph::launchGraph(cudaStream_t stream, NewAlgoContext* noti
     CUDA_ASSERT(cudaGraphLaunch(m_graphExec, stream));
 }
 
-void SecondAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, NewAlgoContext* notification) {
+void SecondAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, AlgorithmContext* notification) {
     std::lock_guard<std::mutex> lock(m_graphMutex);
     std::promise<void> promise;
     std::future<void> future = promise.get_future();
@@ -94,7 +94,7 @@ StatusCode SecondAlgorithm::initialize() {
     return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -108,7 +108,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(NewAlgoContext ctx) co
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
     launchTestKernel3(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -117,7 +117,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(NewAlgoContext ctx) co
     }
     nvtx3::unique_range range2{MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part2" + ctx.info(), nvtxcolor(ctx.eventNumber), nvtx3::payload{ctx.eventNumber}};
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     { auto r2 = std::move(range2); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -128,7 +128,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(NewAlgoContext ctx) co
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -143,7 +143,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(NewAlgoContext
     }
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -154,7 +154,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(NewAlgoContext
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -168,11 +168,11 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(NewAl
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
     // Launch kernels in a single thread to avoid performance drop
-    auto * notif = new NewAlgoContext{ctx};
+    auto * notif = new AlgorithmContext{ctx};
     CUDAThread::post([ctx, notif]() {
         launchTestKernel3(ctx.stream);
         launchTestKernel4(ctx.stream);
-        cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, notif);
+        cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, notif);
     });
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
@@ -184,7 +184,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(NewAl
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -200,7 +200,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(NewAlgo
     auto cudaLock = CUDAMutex::lock();
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     cudaLock.unlock();
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
@@ -212,7 +212,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(NewAlgo
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStreams(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
     auto stream = CUDAThreadLocalStream::get();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -228,7 +228,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStre
     }
     launchTestKernel3(stream);
     launchTestKernel4(stream);
-    cudaLaunchHostFunc(stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -239,7 +239,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStre
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalContext(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
     CUDAThreadLocalContext::check();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -255,7 +255,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalCont
     }
     launchTestKernel3(ctx.stream);
     launchTestKernel4(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     range1.reset(); // End range
     co_yield StatusCode::SUCCESS;
 
@@ -266,7 +266,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalCont
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
@@ -281,7 +281,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(NewAlgoContext ct
     }
 
     // Allocate a notification for the host node
-    auto* notification = new NewAlgoContext{ctx};
+    auto* notification = new AlgorithmContext{ctx};
     m_graphImpl.launchGraph(ctx.stream, notification);
 
     { auto r = std::move(range); } // End range
@@ -294,7 +294,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(NewAlgoContext ct
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
@@ -309,7 +309,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(New
     }
 
     // Allocate a notification for the host node
-    auto* notif = new NewAlgoContext{ctx};
+    auto* notif = new AlgorithmContext{ctx};
     CUDAThread::post([ctx, notif, this]() {
         m_graphContainer.launchGraph(ctx.stream, notif);
     });
@@ -324,7 +324,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(New
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
@@ -339,7 +339,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(NewAlgoCont
     }
 
     // Allocate a notification for the host node
-    auto* notification = new NewAlgoContext{ctx};
+    auto* notification = new AlgorithmContext{ctx};
     m_graphContainer.launchGraph(ctx.stream, notification);
 
     { auto r = std::move(range); } // End range
@@ -352,7 +352,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(NewAlgoCont
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraphDelegated(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraphDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
@@ -367,7 +367,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraphDelegated(Ne
     }
 
     // Allocate a notification for the host node
-    auto* notification = new NewAlgoContext{ctx};
+    auto* notification = new AlgorithmContext{ctx};
     m_graphContainer.launchGraphDelegated(ctx.stream, notification);
 
     { auto r = std::move(range); } // End range

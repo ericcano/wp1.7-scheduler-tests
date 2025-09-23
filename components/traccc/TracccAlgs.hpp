@@ -20,7 +20,7 @@ class TracccCellsAlgorithm : public NewAlgorithmBase {
 public:
    TracccCellsAlgorithm(int numEvents);
    StatusCode initialize() override;
-   AlgCoInterface execute(NewAlgoContext ctx) const override;
+   AlgCoInterface execute(AlgorithmContext ctx) const override;
    StatusCode finalize() override;
 
 private:
@@ -36,7 +36,7 @@ class TracccComputeAlgorithm : public NewAlgorithmBase {
 public:
    TracccComputeAlgorithm(int numEvents);
    StatusCode initialize() override;
-   AlgCoInterface execute(NewAlgoContext ctx) const override;
+   AlgCoInterface execute(AlgorithmContext ctx) const override;
    StatusCode finalize() override;
 
 private:

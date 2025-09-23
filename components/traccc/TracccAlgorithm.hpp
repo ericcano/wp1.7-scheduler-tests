@@ -18,7 +18,7 @@ class TracccAlgorithm : public NewAlgorithmBase {
 public:
    TracccAlgorithm(int numEvents);
    StatusCode initialize() override;
-   AlgCoInterface execute(NewAlgoContext ctx) const override;
+   AlgCoInterface execute(AlgorithmContext ctx) const override;
    StatusCode finalize() override;
 
 private:

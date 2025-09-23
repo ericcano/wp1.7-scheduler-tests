@@ -256,7 +256,7 @@ void NewScheduler::processActionRequest(NewRunQueue::ActionRequest& req) {
     assert(algSlot.coroutine.empty());
     auto & alg = m_algorithms[req.alg].get();
     // Create the algorithm context, using the member-by-member constructor.
-    NewAlgoContext ctx{
+    AlgorithmContext ctx{
       slot.eventNumber,
       req.slot,
       req.alg,

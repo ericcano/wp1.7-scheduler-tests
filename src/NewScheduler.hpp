@@ -28,13 +28,13 @@ namespace WP17NewScheduler {
 
 #define DEFINE_EXCEPTION(name) class name: public WP17NewScheduler::Exception { using WP17NewScheduler::Exception::Exception; }
 
-class NewAlgoContext;
+class AlgorithmContext;
 
 /**
  * @brief A progressive build of the scheduler replacement.
  */
 struct NewScheduler {
-   friend class NewAlgoContext;
+   friend class AlgorithmContext;
 public:
     enum class ExecutionStrategy {
         SingleLaunch,

@@ -26,7 +26,7 @@ ThirdAlgorithmGraph::ThirdAlgorithmGraph() {
     m_kernel5Params.kernelParams = nullptr;
     m_kernel5Params.extra = nullptr;
     CUDA_ASSERT(cudaGraphAddKernelNode(&m_kernel5Node, m_graph, nullptr, 0, &m_kernel5Params));
-    m_hostFunctionParams.fn = NewAlgoContext::newScheduleResumeCallback;
+    m_hostFunctionParams.fn = AlgorithmContext::newScheduleResumeCallback;
     m_hostFunctionParams.userData = nullptr;
     CUDA_ASSERT(cudaGraphAddHostNode(&m_HostFunctionNode, m_graph, &m_kernel5Node, 1, &m_hostFunctionParams));
     CUDA_ASSERT(cudaGraphInstantiate(&m_graphExec, m_graph, nullptr, nullptr, 0));
@@ -37,7 +37,7 @@ ThirdAlgorithmGraph::~ThirdAlgorithmGraph() {
     if (m_graph) cudaGraphDestroy(m_graph);
 }
 
-void ThirdAlgorithmGraph::launchGraph(cudaStream_t stream, NewAlgoContext* context) {
+void ThirdAlgorithmGraph::launchGraph(cudaStream_t stream, AlgorithmContext* context) {
     std::lock_guard<std::mutex> lock(m_graphMutex);
     // Only update host function userData for this launch
     m_hostFunctionParams.userData = context;
@@ -45,7 +45,7 @@ void ThirdAlgorithmGraph::launchGraph(cudaStream_t stream, NewAlgoContext* conte
     CUDA_ASSERT(cudaGraphLaunch(m_graphExec, stream));
 }
 
-void ThirdAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, NewAlgoContext* context) {
+void ThirdAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, AlgorithmContext* context) {
     std::lock_guard<std::mutex> lock(m_graphMutex);
     std::promise<void> promise;
     std::future<void> future = promise.get_future();
@@ -77,7 +77,7 @@ StatusCode ThirdAlgorithm::initialize() {
     return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::execute(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::execute(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -91,7 +91,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::execute(NewAlgoContext ctx) con
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
     launchTestKernel5(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -102,7 +102,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::execute(NewAlgoContext ctx) con
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightMutexed(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightMutexed(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -117,7 +117,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightMutexed(NewAlgoC
     }
     auto cudaLock = CUDAMutex::lock();
     launchTestKernel5(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     cudaLock.unlock();
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
@@ -129,7 +129,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightMutexed(NewAlgoC
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalStreams(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
     auto stream = CUDAThreadLocalStream::get();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -144,7 +144,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalStrea
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
     launchTestKernel5(stream);
-    cudaLaunchHostFunc(stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -155,7 +155,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalStrea
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalContext(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
     CUDAThreadLocalContext::check();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -170,7 +170,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalConte
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
     launchTestKernel5(ctx.stream);
-    cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+    cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -181,7 +181,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightThreadLocalConte
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraph(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -194,7 +194,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraph(NewAlgoContext ctx
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    m_graphImpl.launchGraph(ctx.stream, new NewAlgoContext{ctx});
+    m_graphImpl.launchGraph(ctx.stream, new AlgorithmContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -205,7 +205,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraph(NewAlgoContext ctx
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraphFullyDelegated(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraphFullyDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -218,7 +218,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraphFullyDelegated(NewA
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    auto * notif = new NewAlgoContext{ctx};
+    auto * notif = new AlgorithmContext{ctx};
     CUDAThread::post([this, ctx, notif]() {
         m_graphImpl.launchGraph(ctx.stream, notif);
     });
@@ -232,7 +232,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeGraphFullyDelegated(NewA
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightDelegated(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -245,10 +245,10 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightDelegated(NewAlg
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    auto * notif = new NewAlgoContext{ctx};
+    auto * notif = new AlgorithmContext{ctx};
     CUDAThread::post([ctx, notif]() {
         launchTestKernel5(ctx.stream);
-        cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, notif);
+        cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, notif);
     });
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
@@ -260,7 +260,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeStraightDelegated(NewAlg
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraph(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -273,7 +273,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraph(NewAlgoConte
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    m_graphContainer.launchGraph(ctx.stream, new NewAlgoContext{ctx});
+    m_graphContainer.launchGraph(ctx.stream, new AlgorithmContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 
@@ -284,7 +284,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraph(NewAlgoConte
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraphDelegated(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraphDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -297,7 +297,7 @@ NewAlgorithmBase::AlgCoInterface ThirdAlgorithm::executeCachedGraphDelegated(New
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(ThirdAlgorithm) + " part1, " << ctx.info() << std::endl;
     }
-    m_graphContainer.launchGraphDelegated(ctx.stream, new NewAlgoContext{ctx});
+    m_graphContainer.launchGraphDelegated(ctx.stream, new AlgorithmContext{ctx});
     { auto r = std::move(range); } // End range
     co_yield StatusCode::SUCCESS;
 

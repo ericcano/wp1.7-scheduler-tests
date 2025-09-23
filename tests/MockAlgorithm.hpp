@@ -33,7 +33,7 @@ public:
         m_Initialized = true;
         return StatusCode::SUCCESS; 
     }
-    AlgCoInterface execute(NewAlgoContext ctx) const override {
+    AlgCoInterface execute(AlgorithmContext ctx) const override {
         assert (m_Initialized);
         // Get hold of the dependencies
         for (const auto& dep : dependencies()) {
@@ -98,7 +98,7 @@ public:
 class MockSuspendingAlgorithm : public MockAlgorithm {
 public:
     using MockAlgorithm::MockAlgorithm;
-    AlgCoInterface execute(NewAlgoContext ctx) const override {
+    AlgCoInterface execute(AlgorithmContext ctx) const override {
         // Get hold of the dependencies
         for (const auto& dep : dependencies()) {
             const int* input = nullptr;
@@ -107,8 +107,8 @@ public:
             (void)input; // Suppress unused variable warning
         }
         // Already inject resumption here (simulate CUDA callback)
-        auto *c = new NewAlgoContext{ctx};
-        NewAlgoContext::newScheduleResumeCallback(c);
+        auto *c = new AlgorithmContext{ctx};
+        AlgorithmContext::newScheduleResumeCallback(c);
         // Simulate suspension
         co_yield StatusCode::SUCCESS;
         // Produce the products

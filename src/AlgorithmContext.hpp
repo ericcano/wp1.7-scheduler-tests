@@ -14,7 +14,7 @@ class NewScheduler;
  * @brief Indices to event/slot context, plus pointed to global scheduler, they are the sole interface to the algorithms, via `execute()`.
  * Also contains the CUDA stream.
  */
-struct NewAlgoContext {
+struct AlgorithmContext {
    int eventNumber = 0;
    int slotNumber = 0;
    std::size_t algorithmNumber = 0; // Index of the current algorithm in the scheduler's list.
@@ -23,7 +23,7 @@ struct NewAlgoContext {
    cudaStream_t stream;
 
    // Member by member constructor
-   NewAlgoContext(int eventNumber, int slotNumber, std::size_t algorithmNumber,
+   AlgorithmContext(int eventNumber, int slotNumber, std::size_t algorithmNumber,
                   NewScheduler& scheduler, EventStore& eventStore, cudaStream_t stream)
        : eventNumber(eventNumber),
          slotNumber(slotNumber),
@@ -33,7 +33,7 @@ struct NewAlgoContext {
          stream(stream) {}
 
    // Copy constructor
-   NewAlgoContext(const NewAlgoContext&) = default;
+   AlgorithmContext(const AlgorithmContext&) = default;
 
    std::string info() const {
       return "ctx.eventNumber = " + std::to_string(this->eventNumber)

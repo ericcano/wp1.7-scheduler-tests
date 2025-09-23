@@ -70,7 +70,7 @@ StatusCode TracccCudaAlgorithm::initialize() {
 }
 
 
-NewAlgorithmBase::AlgCoInterface TracccCudaAlgorithm::execute(NewAlgoContext ctx) const {
+NewAlgorithmBase::AlgCoInterface TracccCudaAlgorithm::execute(AlgorithmContext ctx) const {
    const auto& cells = m_cells[ctx.eventNumber % m_numEvents];
 
    traccc::edm::silicon_cell_collection::buffer cells_buffer{
@@ -80,11 +80,11 @@ NewAlgorithmBase::AlgCoInterface TracccCudaAlgorithm::execute(NewAlgoContext ctx
    m_ms_cuda(measurements_cuda_buffer);
 
    auto spacepoints_cuda_buffer = m_sf_cuda(m_device_detector_view, measurements_cuda_buffer);
-   cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+   cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
    co_yield StatusCode::SUCCESS;
 
    auto seeds_cuda_buffer = m_sa_cuda(spacepoints_cuda_buffer);
-   cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+   cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
    co_yield StatusCode::SUCCESS;
 
    // Constant B field for the track finding and fitting.
@@ -92,7 +92,7 @@ NewAlgorithmBase::AlgCoInterface TracccCudaAlgorithm::execute(NewAlgoContext ctx
    const detray::bfield::const_field_t field = detray::bfield::create_const_field(field_vec);
 
    auto params_cuda_buffer = m_tp_cuda(spacepoints_cuda_buffer, seeds_cuda_buffer, field_vec);
-   cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+   cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
    co_yield StatusCode::SUCCESS;
 
    auto track_candidates_buffer = m_finding_alg_cuda(
@@ -102,7 +102,7 @@ NewAlgorithmBase::AlgCoInterface TracccCudaAlgorithm::execute(NewAlgoContext ctx
        = m_fitting_alg_cuda(m_device_detector_view, field, track_candidates_buffer);
 
    m_stream.synchronize();
-   cudaLaunchHostFunc(ctx.stream, NewAlgoContext::newScheduleResumeCallback, new NewAlgoContext{ctx});
+   cudaLaunchHostFunc(ctx.stream, AlgorithmContext::newScheduleResumeCallback, new AlgorithmContext{ctx});
    co_return StatusCode::SUCCESS;
 }
 

@@ -13,7 +13,7 @@
 
 #include <gtest/gtest.h>
 
-#include "NewAlgoDependencyMap.hpp"
+#include "AlgorithmDependencyMap.hpp"
 #include "NewEventContentManager.hpp"
 #include "EventStore.hpp"
 #include "StatusCode.hpp"
@@ -26,7 +26,7 @@ TEST(NewEventContentManagerTest, Chain) {
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
     std::vector<std::reference_wrapper<NewAlgorithmBase>> chainAlgs{algA, algB, algC};
-    NewAlgoDependencyMap depmap{chainAlgs};
+    AlgorithmDependencyMap depmap{chainAlgs};
     NewEventContentManager manager;
     manager.resize(depmap);
     const auto& ready = manager.getDependentAndReadyAlgs(0, depmap);

@@ -7,7 +7,7 @@
 #include <iostream>
 #include <mutex>
 #include <vector>
-#include "NewAlgoDependencyMap.hpp"
+#include "AlgorithmDependencyMap.hpp"
 
 
 // Forward declarations.
@@ -28,7 +28,7 @@ public:
     /**
       * @brief Default constructor, only used at initialization of the scheduler slot.
       */
-   void resize(const NewAlgoDependencyMap& depMap) {
+   void resize(const AlgorithmDependencyMap& depMap) {
       m_algContent.clear();
       m_algContent.resize(depMap.m_algDependencies[0].size());
     }
@@ -42,16 +42,16 @@ public:
     * All the products that the algorithm
     */
    StatusCode setAlgExecuted(std::size_t alg, 
-       const NewAlgoDependencyMap& depMap);
+       const AlgorithmDependencyMap& depMap);
 
    /**
     * @brief Get the list of algorithms that are ready to be executed following the completion of the given algorithm.
     * @param algIdx The index of the algorithm that has completed.
-    * @param depMap Reference to the NewAlgoDependencyMap containing the algorithm dependencies.
+    * @param depMap Reference to the AlgorithmDependencyMap containing the algorithm dependencies.
     * @return A vector of indices of the algorithms that are ready to be executed.
     */
    std::vector<std::size_t> getDependentAndReadyAlgs (
-       std::size_t algIdx, const NewAlgoDependencyMap& depMap) const;
+       std::size_t algIdx, const AlgorithmDependencyMap& depMap) const;
 
    /**
     * @brief Check if all algorithms have completed execution.
@@ -62,10 +62,10 @@ public:
    /**
     * @brief Check if an algorithm's data dependencies are availble.
     * @param algIdx The index of the algorithm to check.
-    * @param depMap Reference to the NewAlgoDependencyMap containing the algorithm dependencies.
+    * @param depMap Reference to the AlgorithmDependencyMap containing the algorithm dependencies.
     * @todo Could be renamed to `areAlgoDependenciesMet()`.
     */
-   bool isAlgExecutable(std::size_t algIdx, const NewAlgoDependencyMap& depMap) const;
+   bool isAlgExecutable(std::size_t algIdx, const AlgorithmDependencyMap& depMap) const;
 
    /**
     * @brief Reset the content manager to no algorithm executed.
@@ -73,12 +73,12 @@ public:
    void reset();
 
    /**
-    * @brief Dump the contents of the NewAlgoDependencyMap to std::ostream.
+    * @brief Dump the contents of the AlgorithmDependencyMap to std::ostream.
     * @param os Output stream to write to.
     */
-   void dumpContents(const NewAlgoDependencyMap& depMap, std::ostream& os = std::cout) const;
+   void dumpContents(const AlgorithmDependencyMap& depMap, std::ostream& os = std::cout) const;
 
   private:
    /// Current content of the event store.
-   NewAlgoDependencyMap::DataObjColl_t m_algContent;
+   AlgorithmDependencyMap::DataObjColl_t m_algContent;
 };

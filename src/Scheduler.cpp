@@ -39,7 +39,7 @@ void Scheduler::initSchedulerState()  {
   m_remainingEventsToComplete = 0;
   m_eventSlots.clear();
   // First, populate the algorithm dependency map with the algorithms.
-  new(&m_algoDependencyMap) NewAlgoDependencyMap(m_algorithms);
+  new(&m_algoDependencyMap) AlgorithmDependencyMap(m_algorithms);
 
   // Initialize all the algorithms.
   if (StatusCode status = NewAlgorithmBase::for_all(m_algorithms, &NewAlgorithmBase::initialize);

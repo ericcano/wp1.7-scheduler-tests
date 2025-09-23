@@ -1,4 +1,4 @@
-#include "NewAlgoDependencyMap.hpp"
+#include "AlgorithmDependencyMap.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -17,7 +17,7 @@
  * @param objects list of string to be added to the bitset
  * @param objBitset the bitset.
  */
-void NewAlgoDependencyMap::DataObjColl_t::setBits(const std::vector<std::string>& allObjectsVec,
+void AlgorithmDependencyMap::DataObjColl_t::setBits(const std::vector<std::string>& allObjectsVec,
              const std::vector<std::string>& objects) {
    reset();
    assert(size() == allObjectsVec.size());
@@ -30,7 +30,7 @@ void NewAlgoDependencyMap::DataObjColl_t::setBits(const std::vector<std::string>
 }
 
 
-NewAlgoDependencyMap::NewAlgoDependencyMap(
+AlgorithmDependencyMap::AlgorithmDependencyMap(
     const std::vector<std::reference_wrapper<NewAlgorithmBase>>& algs)
     : m_algDependencies(algs.size()),
       m_algDependents(algs.size()),
@@ -92,7 +92,7 @@ NewAlgoDependencyMap::NewAlgoDependencyMap(
    }
 }
 
-bool NewAlgoDependencyMap::isAlgIndependent(std::size_t algIdx) const {
+bool AlgorithmDependencyMap::isAlgIndependent(std::size_t algIdx) const {
    assert(algIdx < m_algDependencies.size());
    return m_algDependencies[algIdx].none();
 }
@@ -109,7 +109,7 @@ bool NewAlgoDependencyMap::isAlgIndependent(std::size_t algIdx) const {
 // }
 
 
-// bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, const NewAlgoDependencyMap& depMap) const {
+// bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, const AlgorithmDependencyMap& depMap) const {
 //    assert(algIdx < depMap.m_algDependencies.size());
 //    return depMap.m_algDependencies[algIdx].is_subset_of(m_algContent);
 // }
@@ -119,7 +119,7 @@ bool NewAlgoDependencyMap::isAlgIndependent(std::size_t algIdx) const {
 //    m_algContent.reset();
 // }
 
-// void NewEventContentManager::dumpContents(const NewAlgoDependencyMap& depMap, std::ostream& os) const {
+// void NewEventContentManager::dumpContents(const AlgorithmDependencyMap& depMap, std::ostream& os) const {
 //     os << "NewEventContentManager dump:\n";
 //     os << "Dependencies per algorithm:\n";
 //     for (size_t i = 0; i < depMap.m_algDependencies.size(); ++i) {

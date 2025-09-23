@@ -142,7 +142,7 @@ public:
       /**
        * @brief Initializer of event content manager.
        */
-      void initialize(const NewAlgoDependencyMap& depMap, int eId) {
+      void initialize(const AlgorithmDependencyMap& depMap, int eId) {
          eventContentManager.resize(depMap);
          for (auto aidx: std::ranges::iota_view(std::size_t(0), depMap.algorithmsCount())) {
             std::ignore = algorithms[aidx];
@@ -260,7 +260,7 @@ private:
    std::vector<std::reference_wrapper<NewAlgorithmBase>> m_algorithms;
 
    /// @brief The event content manager
-   NewAlgoDependencyMap m_algoDependencyMap;
+   AlgorithmDependencyMap m_algoDependencyMap;
 
    /// @brief Vector tracking each slot's state
    std::vector<EventSlot> m_eventSlots;

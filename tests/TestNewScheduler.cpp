@@ -1,11 +1,11 @@
-#include "Scheduler.hpp"
+#include "NewScheduler.hpp"
 #include "gtest/gtest.h"
 #include "MockAlgorithm.hpp"
 #include <ranges>
 
 #pragma GCC optimize ("O0")
 
-TEST(SchedulerTest, RegisterFiveAlgorithms) {
+TEST(NewSchedulerTest, RegisterFiveAlgorithms) {
     Scheduler sched;
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
@@ -22,7 +22,7 @@ TEST(SchedulerTest, RegisterFiveAlgorithms) {
     ASSERT_EQ(sched.m_algorithms.size(), 5);
 }
 
-TEST(SchedulerTest, EventSlot) {
+TEST(NewSchedulerTest, EventSlot) {
     MockAlgorithm::clear();
     MockAlgorithm algA{{}, {"prodA"}};
     std::vector<std::reference_wrapper<NewAlgorithmBase>> algorithms{{algA}};
@@ -33,7 +33,7 @@ TEST(SchedulerTest, EventSlot) {
     // evSlot.eventContentManager.dumpContents(depMap);
 }
 
-TEST(SchedulerTest, initSchedulerState) {
+TEST(NewSchedulerTest, initSchedulerState) {
     MockAlgorithm::clear();
     Scheduler sched;
     MockAlgorithm algA{{}, {"prodA"}};
@@ -61,7 +61,7 @@ TEST(SchedulerTest, initSchedulerState) {
 }
 
 
-TEST(SchedulerTest, scheduleEvent) {
+TEST(NewSchedulerTest, scheduleEvent) {
     MockAlgorithm::clear();
     Scheduler sched(10,30);
     MockAlgorithm algA{{}, {"prodA"}};
@@ -94,7 +94,7 @@ TEST(SchedulerTest, scheduleEvent) {
     assert (sched.finalizeAlgorithms());
 }
 
-TEST(SchedulerTest, scheduleEventBranchedDependencies) {
+TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
     MockAlgorithm::clear();
     Scheduler sched(10,30);
     MockAlgorithm algA{{}, {"prodA"}};
@@ -127,7 +127,7 @@ TEST(SchedulerTest, scheduleEventBranchedDependencies) {
     assert (sched.finalizeAlgorithms());
 }
 
-TEST(SchedulerTest, scheduleSuspendingAlgo) {
+TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
     MockAlgorithm::clear();
     Scheduler sched(20,40);
     MockSuspendingAlgorithm algA{{}, {"prodA"}};
@@ -160,7 +160,7 @@ TEST(SchedulerTest, scheduleSuspendingAlgo) {
     assert (sched.finalizeAlgorithms());
 }
 
-TEST(SchedulerTest, scheduleSuspendingAllStrategies) {
+TEST(NewSchedulerTest, scheduleSuspendingAllStrategies) {
     using ES = Scheduler::ExecutionStrategy;
     for (auto strategy : {ES::SingleLaunch,
                           ES::StraightLaunches,
@@ -207,7 +207,7 @@ TEST(SchedulerTest, scheduleSuspendingAllStrategies) {
     }
 }
 
-TEST(SchedulerTest, scheduleEventLinearWithError) {
+TEST(NewSchedulerTest, scheduleEventLinearWithError) {
     MockAlgorithm::clear();
     Scheduler sched(1,1);
     MockAlgorithm algA{{}, {"prodA"}};

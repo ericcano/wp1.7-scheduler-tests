@@ -125,7 +125,7 @@
 // }
 
 StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg, 
-    const NewAlgoDependencyMap & depMap) {
+    const AlgorithmDependencyMap & depMap) {
    assert(alg < depMap.m_algDependencies.size());
    m_algContent |= depMap.m_algProducts[alg];
    return StatusCode::SUCCESS;
@@ -149,7 +149,7 @@ StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg,
 // }
 
 std::vector<std::size_t> NewEventContentManager::getDependentAndReadyAlgs(std::size_t algIdx, 
-  const NewAlgoDependencyMap & depMap) const {
+  const AlgorithmDependencyMap & depMap) const {
    assert(algIdx < depMap.m_algDependents.size());
    std::vector<std::size_t> readyAlgs;
 
@@ -165,7 +165,7 @@ std::vector<std::size_t> NewEventContentManager::getDependentAndReadyAlgs(std::s
 }
 
 bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, 
-    const NewAlgoDependencyMap& depMap) const {
+    const AlgorithmDependencyMap& depMap) const {
    assert(algIdx < depMap.m_algDependencies.size());
    return depMap.m_algDependencies[algIdx].is_subset_of(m_algContent);
 }
@@ -221,7 +221,7 @@ void NewEventContentManager::reset() {
 //     os << "\n";
 // }
 
-void NewEventContentManager::dumpContents(const NewAlgoDependencyMap& depMap, std::ostream& os) const {
+void NewEventContentManager::dumpContents(const AlgorithmDependencyMap& depMap, std::ostream& os) const {
     os << "NewEventContentManager dump:\n";
     os << "Dependencies per algorithm:\n";
     for (size_t i = 0; i < depMap.m_algDependencies.size(); ++i) {

@@ -33,7 +33,7 @@ class AlgorithmContext;
 /**
  * @brief A progressive build of the scheduler replacement.
  */
-struct NewScheduler {
+struct Scheduler {
    friend class AlgorithmContext;
 public:
     enum class ExecutionStrategy {
@@ -57,16 +57,16 @@ public:
    };
 
    /**
-    * @brief NewScheduler constructor
+    * @brief Scheduler constructor
     * @param threads number of threads
     * @param slots Number of slots (i.e. concurrent events being processed).
     * @param executionStrategy Execution strategy for the algorithms.
     */
-   NewScheduler(int threads = 4, int slots = 4, ExecutionStrategy executionStrategy = ExecutionStrategy::SingleLaunch);
+   Scheduler(int threads = 4, int slots = 4, ExecutionStrategy executionStrategy = ExecutionStrategy::SingleLaunch);
 
    // Forbidden constructors
-   NewScheduler(const NewScheduler&) = delete;
-   NewScheduler& operator=(const NewScheduler&) = delete;
+   Scheduler(const Scheduler&) = delete;
+   Scheduler& operator=(const Scheduler&) = delete;
 
    /**
     * @brief Finalizes all algorithms. This should be called after by user after running, as object destruction
@@ -80,7 +80,7 @@ public:
    /**
     * @brief Destructor is empty.
     */
-   ~NewScheduler() {}
+   ~Scheduler() {}
 
 
    /** 
@@ -112,7 +112,7 @@ public:
    /**
     * @brief Structure holding algorithm state and interface to run it.
     */
-   struct NewAlgoSlot {
+   struct AlgorithmSlot {
       /**
        * @brief Mutex to ensure that only one thread processes the algorithm. The processing can queue
        * callbacks to GPU or other async resource, which will add the resuming of this algorithm to the 
@@ -131,14 +131,14 @@ public:
    /**
     * @brief Structure holding all the algos and data for one the processing of one event.
     */
-   struct NewEventSlot {
+   struct EventSlot {
       // Constructors and destructors will manage the CUDA stream.
-      NewEventSlot();
-      ~NewEventSlot();
-      NewEventSlot(const NewEventSlot&) = delete;
-      NewEventSlot& operator=(const NewEventSlot&) = delete;
-      NewEventSlot(NewEventSlot&&) = delete;
-      NewEventSlot& operator=(NewEventSlot&&) = delete;
+      EventSlot();
+      ~EventSlot();
+      EventSlot(const EventSlot&) = delete;
+      EventSlot& operator=(const EventSlot&) = delete;
+      EventSlot(EventSlot&&) = delete;
+      EventSlot& operator=(EventSlot&&) = delete;
       /**
        * @brief Initializer of event content manager.
        */
@@ -147,7 +147,7 @@ public:
          for (auto aidx: std::ranges::iota_view(std::size_t(0), depMap.algorithmsCount())) {
             std::ignore = algorithms[aidx];
          }
-         new (& algorithms) std::vector<NewAlgoSlot>(depMap.algorithmsCount());
+         new (& algorithms) std::vector<AlgorithmSlot>(depMap.algorithmsCount());
          eventNumber = eId;
       }
 
@@ -164,7 +164,7 @@ public:
       /**
        * @brief Algorithms in the slot, each with its own coroutine interface and mutex.
        */
-      std::vector<NewAlgoSlot> algorithms; // Algorithms in the slot, each with its own coroutine interface and mutex
+      std::vector<AlgorithmSlot> algorithms; // Algorithms in the slot, each with its own coroutine interface and mutex
 
       /**
        * @brief Event content manager for the slot, managing data objects and dependencies.
@@ -185,7 +185,7 @@ public:
    /**
     * @brief Run queue for the scheduler
     */
-   struct NewRunQueue {
+   struct RunQueue {
       struct ActionRequest {
         enum class ActionType {
           Start,  ///< Request to start the slot
@@ -213,7 +213,7 @@ private:
     * @param slot The event slot to schedule the next event in.
     * @note This function assumes that the slot's scheduling mutex is already locked.
     */
-   NewRunQueue::ActionRequest scheduleNextEventInSlot(NewEventSlot& slot);
+   RunQueue::ActionRequest scheduleNextEventInSlot(EventSlot& slot);
 
    /**
     * @brief Starts the additional worker threads that will process the run queue from 
@@ -230,7 +230,7 @@ private:
     * @brief Processes a single action request from the run queue.
     * @param req The action request to process.
     */
-   void processActionRequest(NewRunQueue::ActionRequest& req);
+   void processActionRequest(RunQueue::ActionRequest& req);
 
    /**
     * @brief Joins all additional worker threads, ensuring they have completed execution.
@@ -263,7 +263,7 @@ private:
    NewAlgoDependencyMap m_algoDependencyMap;
 
    /// @brief Vector tracking each slot's state
-   std::vector<NewEventSlot> m_eventSlots;
+   std::vector<EventSlot> m_eventSlots;
 
   //  /// @brief CUDA streams for each slot, in a one-to-one relationship.
   //  /// @todo It should simply be a member of SlotState.
@@ -283,7 +283,7 @@ private:
    /**
     * @brief Run queue for the scheduler
     */
-   NewRunQueue m_runQueue;
+   RunQueue m_runQueue;
    /**
     * @brief Worker threads for processing the slots
     */

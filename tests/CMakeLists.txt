@@ -17,15 +17,15 @@ target_link_libraries(TestNewEventContentManager PRIVATE CoScheduler ${GTEST_LIB
 target_compile_options(TestNewEventContentManager PRIVATE -fno-access-control) # Allow private class members to be accessed in tests
 add_test(NAME TestNewEventContentManager COMMAND TestNewEventContentManager)
 
-add_executable(TestNewScheduler TestNewScheduler.cpp)
-target_compile_options(TestNewScheduler PRIVATE -fno-access-control) # Allow private class members to be accessed in tests
-target_link_libraries(TestNewScheduler PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
-add_test(NAME TestNewScheduler COMMAND TestNewScheduler)
+add_executable(TestScheduler TestScheduler.cpp)
+target_compile_options(TestScheduler PRIVATE -fno-access-control) # Allow private class members to be accessed in tests
+target_link_libraries(TestScheduler PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+add_test(NAME TestScheduler COMMAND TestScheduler)
 
-add_executable(TestNewEventSlot TestNewEventSlot.cpp)
-target_compile_options(TestNewEventSlot PRIVATE -fno-access-control) # Allow private class members to be accessed in tests
-target_link_libraries(TestNewEventSlot PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
-add_test(NAME TestNewEventSlot COMMAND TestNewEventSlot)
+add_executable(TestEventSlot TestEventSlot.cpp)
+target_compile_options(TestEventSlot PRIVATE -fno-access-control) # Allow private class members to be accessed in tests
+target_link_libraries(TestEventSlot PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+add_test(NAME TestEventSlot COMMAND TestEventSlot)
 
 ## TBB tests
 add_executable(TestTBBTaskSuspension TestTBBTaskSuspension.cpp)

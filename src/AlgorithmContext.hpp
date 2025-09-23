@@ -8,7 +8,7 @@
 
 // Forward declarations.
 class EventStore;
-class NewScheduler;
+class Scheduler;
 
 /**
  * @brief Indices to event/slot context, plus pointed to global scheduler, they are the sole interface to the algorithms, via `execute()`.
@@ -18,13 +18,13 @@ struct AlgorithmContext {
    int eventNumber = 0;
    int slotNumber = 0;
    std::size_t algorithmNumber = 0; // Index of the current algorithm in the scheduler's list.
-   NewScheduler& scheduler;
+   Scheduler& scheduler;
    EventStore& eventStore;
    cudaStream_t stream;
 
    // Member by member constructor
    AlgorithmContext(int eventNumber, int slotNumber, std::size_t algorithmNumber,
-                  NewScheduler& scheduler, EventStore& eventStore, cudaStream_t stream)
+                  Scheduler& scheduler, EventStore& eventStore, cudaStream_t stream)
        : eventNumber(eventNumber),
          slotNumber(slotNumber),
          algorithmNumber(algorithmNumber),

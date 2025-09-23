@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <getopt.h> // For command-line argument parsing
 #include <iomanip> // Add this include for std::scientific, std::fixed, etc.
-#include "NewScheduler.hpp"
+#include "Scheduler.hpp"
 #include "FirstAlgorithm.hpp"
 #include "SecondAlgorithm.hpp"
 #include "ThirdAlgorithm.hpp"
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     bool errorEnabled = false;  // Default: no error
     int errorEventId = -1;      // Default: no specific event for error
     bool verbose = false;       // Default: no verbose output
-    NewScheduler::ExecutionStrategy strategy = NewScheduler::ExecutionStrategy::SingleLaunch;
+    Scheduler::ExecutionStrategy strategy = Scheduler::ExecutionStrategy::SingleLaunch;
 
     // Define long options
     static struct option long_options[] = {
@@ -91,25 +91,25 @@ int main(int argc, char* argv[]) {
             case 9: {
                 std::string value(optarg);
                 if (value == "single") {
-                    strategy = NewScheduler::ExecutionStrategy::SingleLaunch;
+                    strategy = Scheduler::ExecutionStrategy::SingleLaunch;
                 } else if (value == "graph") {
-                    strategy = NewScheduler::ExecutionStrategy::Graph;
+                    strategy = Scheduler::ExecutionStrategy::Graph;
                 } else if (value == "graphFullyDelegated") {
-                    strategy = NewScheduler::ExecutionStrategy::GraphFullyDelegated;
+                    strategy = Scheduler::ExecutionStrategy::GraphFullyDelegated;
                 } else if (value == "cachedGraphs") {
-                    strategy = NewScheduler::ExecutionStrategy::CachedGraphs;
+                    strategy = Scheduler::ExecutionStrategy::CachedGraphs;
                 } else if (value == "straightLaunches") {
-                    strategy = NewScheduler::ExecutionStrategy::StraightLaunches;
+                    strategy = Scheduler::ExecutionStrategy::StraightLaunches;
                 } else if (value == "straightDelegated") {
-                    strategy = NewScheduler::ExecutionStrategy::StraightDelegated;
+                    strategy = Scheduler::ExecutionStrategy::StraightDelegated;
                 } else if (value == "straightMutexed") {
-                    strategy = NewScheduler::ExecutionStrategy::StraightMutexed;
+                    strategy = Scheduler::ExecutionStrategy::StraightMutexed;
                 } else if (value == "straightThreadLocalStreams") {
-                    strategy = NewScheduler::ExecutionStrategy::StraightThreadLocalStreams;
+                    strategy = Scheduler::ExecutionStrategy::StraightThreadLocalStreams;
                 } else if (value == "straightThreadLocalContext") {
-                    strategy = NewScheduler::ExecutionStrategy::StraightThreadLocalContext;
+                    strategy = Scheduler::ExecutionStrategy::StraightThreadLocalContext;
                 } else if (value == "cachedGraphsDelegated") {
-                    strategy = NewScheduler::ExecutionStrategy::CachedGraphsDelegated;
+                    strategy = Scheduler::ExecutionStrategy::CachedGraphsDelegated;
                 } else {
                     std::cerr << "Unknown value for --launchStrategy: " << value << std::endl;
                     return 1;
@@ -134,10 +134,10 @@ int main(int argc, char* argv[]) {
     std::cout << "Error in FirstAlgorithm: " << (errorEnabled ? "enabled" : "disabled")
               << ", event ID: " << errorEventId << "\n";
     std::cout << "Verbose output: " << (verbose ? "enabled" : "disabled") << "\n";
-    std::cout << "CUDA kernels launch strategy: " << NewScheduler::to_string(strategy) << "\n";
+    std::cout << "CUDA kernels launch strategy: " << Scheduler::to_string(strategy) << "\n";
 
     // Initialize the scheduler
-    NewScheduler scheduler(threads, streams, strategy);
+    Scheduler scheduler(threads, streams, strategy);
 
     // Create the algorithms
     FirstAlgorithm firstAlgorithm(errorEnabled, errorEventId, verbose);
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
 
     // Warm up run if requested
     if (warmupEvents > 0) {
-        NewScheduler::RunStats warmupStats;
+        Scheduler::RunStats warmupStats;
         if (StatusCode status = scheduler.run(warmupEvents, warmupStats); !status) {
             std::cerr << "Warm up run failed: " << status.what() << std::endl;
             return EXIT_FAILURE;
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Main run
-    NewScheduler::RunStats stats;
+    Scheduler::RunStats stats;
     if (StatusCode status = scheduler.run(events, stats); !status) {
         std::cerr << "Scheduler run failed: " << status.what() << std::endl;
         return EXIT_FAILURE;

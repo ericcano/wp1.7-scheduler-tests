@@ -1,8 +1,8 @@
-#include "NewScheduler.hpp"
+#include "Scheduler.hpp"
 #include "AlgorithmContext.hpp"
 
 void AlgorithmContext::newScheduleResumeCallback(void* args) {
-  using AR = NewScheduler::NewRunQueue::ActionRequest;
+  using AR = Scheduler::RunQueue::ActionRequest;
   std::unique_ptr<AlgorithmContext> ctx(static_cast<AlgorithmContext*>(args));
 
   // std::cout << "In NewAlgoContext::newScheduleResumeCallback(): Scheduling resume for event " << ctx->eventNumber

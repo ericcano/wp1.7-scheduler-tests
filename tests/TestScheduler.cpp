@@ -1,12 +1,12 @@
-#include "NewScheduler.hpp"
+#include "Scheduler.hpp"
 #include "gtest/gtest.h"
 #include "MockAlgorithm.hpp"
 #include <ranges>
 
 #pragma GCC optimize ("O0")
 
-TEST(NewSchedulerTest, RegisterFiveAlgorithms) {
-    NewScheduler sched;
+TEST(SchedulerTest, RegisterFiveAlgorithms) {
+    Scheduler sched;
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
@@ -22,20 +22,20 @@ TEST(NewSchedulerTest, RegisterFiveAlgorithms) {
     ASSERT_EQ(sched.m_algorithms.size(), 5);
 }
 
-TEST(NewSchedulerTest, NewEventSlot) {
+TEST(SchedulerTest, EventSlot) {
     MockAlgorithm::clear();
     MockAlgorithm algA{{}, {"prodA"}};
     std::vector<std::reference_wrapper<NewAlgorithmBase>> algorithms{{algA}};
     NewAlgoDependencyMap depMap{algorithms};
-    NewScheduler::NewEventSlot evSlot;
+    Scheduler::EventSlot evSlot;
     evSlot.initialize(depMap, -1);
     ASSERT_EQ(evSlot.eventNumber, -1); // Default event number
     // evSlot.eventContentManager.dumpContents(depMap);
 }
 
-TEST(NewSchedulerTest, initSchedulerState) {
+TEST(SchedulerTest, initSchedulerState) {
     MockAlgorithm::clear();
-    NewScheduler sched;
+    Scheduler sched;
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
@@ -61,9 +61,9 @@ TEST(NewSchedulerTest, initSchedulerState) {
 }
 
 
-TEST(NewSchedulerTest, scheduleEvent) {
+TEST(SchedulerTest, scheduleEvent) {
     MockAlgorithm::clear();
-    NewScheduler sched(10,30);
+    Scheduler sched(10,30);
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
@@ -75,7 +75,7 @@ TEST(NewSchedulerTest, scheduleEvent) {
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
 
-    NewScheduler::RunStats stats;
+    Scheduler::RunStats stats;
     int nEvents = 100;
     StatusCode s;
     s = sched.run(nEvents, stats);
@@ -94,9 +94,9 @@ TEST(NewSchedulerTest, scheduleEvent) {
     assert (sched.finalizeAlgorithms());
 }
 
-TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
+TEST(SchedulerTest, scheduleEventBranchedDependencies) {
     MockAlgorithm::clear();
-    NewScheduler sched(10,30);
+    Scheduler sched(10,30);
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
     MockAlgorithm algC{{"prodA"}, {"prodC"}};
@@ -108,7 +108,7 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
 
-    NewScheduler::RunStats stats;
+    Scheduler::RunStats stats;
     int nEvents = 100;
     StatusCode s;
     s = sched.run(nEvents, stats);
@@ -127,9 +127,9 @@ TEST(NewSchedulerTest, scheduleEventBranchedDependencies) {
     assert (sched.finalizeAlgorithms());
 }
 
-TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
+TEST(SchedulerTest, scheduleSuspendingAlgo) {
     MockAlgorithm::clear();
-    NewScheduler sched(20,40);
+    Scheduler sched(20,40);
     MockSuspendingAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
     MockSuspendingAlgorithm algC{{"prodA"}, {"prodC"}};
@@ -141,7 +141,7 @@ TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
 
-    NewScheduler::RunStats stats;
+    Scheduler::RunStats stats;
     int nEvents = 100;
     StatusCode s;
     s = sched.run(nEvents, stats);
@@ -160,8 +160,8 @@ TEST(NewSchedulerTest, scheduleSuspendingAlgo) {
     assert (sched.finalizeAlgorithms());
 }
 
-TEST(NewSchedulerTest, scheduleSuspendingAllStrategies) {
-    using ES = NewScheduler::ExecutionStrategy;
+TEST(SchedulerTest, scheduleSuspendingAllStrategies) {
+    using ES = Scheduler::ExecutionStrategy;
     for (auto strategy : {ES::SingleLaunch,
                           ES::StraightLaunches,
                           ES::StraightDelegated,
@@ -173,9 +173,9 @@ TEST(NewSchedulerTest, scheduleSuspendingAllStrategies) {
                           ES::CachedGraphs,
                           ES::CachedGraphsDelegated
                         }) {
-        // std::cout << "Testing strategy: " << NewScheduler::to_string(strategy) << std::endl;
+        // std::cout << "Testing strategy: " << Scheduler::to_string(strategy) << std::endl;
         MockAlgorithm::clear();
-        NewScheduler sched(20, 40, strategy);
+        Scheduler sched(20, 40, strategy);
         MockSuspendingAlgorithm algA{{}, {"prodA"}};
         MockAlgorithm algB{{"prodA", "prodE"}, {"prodB"}};
         MockSuspendingAlgorithm algC{{"prodA"}, {"prodC"}};
@@ -187,7 +187,7 @@ TEST(NewSchedulerTest, scheduleSuspendingAllStrategies) {
         sched.addAlgorithm(algD);
         sched.addAlgorithm(algE);
 
-        NewScheduler::RunStats stats;
+        Scheduler::RunStats stats;
         int nEvents = 100;
         StatusCode s;
         s = sched.run(nEvents, stats);
@@ -207,9 +207,9 @@ TEST(NewSchedulerTest, scheduleSuspendingAllStrategies) {
     }
 }
 
-TEST(NewSchedulerTest, scheduleEventLinearWithError) {
+TEST(SchedulerTest, scheduleEventLinearWithError) {
     MockAlgorithm::clear();
-    NewScheduler sched(1,1);
+    Scheduler sched(1,1);
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
@@ -224,7 +224,7 @@ TEST(NewSchedulerTest, scheduleEventLinearWithError) {
     sched.addAlgorithm(algD);
     sched.addAlgorithm(algE);
 
-    NewScheduler::RunStats stats;
+    Scheduler::RunStats stats;
     int nEvents = 100;
     StatusCode s;
     s = sched.run(nEvents, stats);

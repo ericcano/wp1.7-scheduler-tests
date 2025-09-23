@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "NewScheduler.hpp"
+#include "Scheduler.hpp"
 
-TEST(NewEventSlotTest, Basics) {
-    NewScheduler::NewEventSlot evSlot;
+TEST(EventSlotTest, Basics) {
+    Scheduler::EventSlot evSlot;
     ASSERT_EQ(evSlot.eventNumber, -1); // Default event number
     ASSERT_TRUE(evSlot.algorithms.empty()); // No algorithms by default
     ASSERT_NE(evSlot.stream, (cudaStream_t)cudaStreamDefault); // Stream should be initialized to non default
@@ -14,9 +14,9 @@ TEST(NewEventSlotTest, Basics) {
     // evSlot.eventContentManager.dumpContents(); // Just to ensure it can be called 
 }
 
-TEST(NewEventSlotTest, Vector) {
-    std::vector<NewScheduler::NewEventSlot> evSlotVec;
-    new (&evSlotVec) std::vector<NewScheduler::NewEventSlot>(3);
+TEST(EventSlotTest, Vector) {
+    std::vector<Scheduler::EventSlot> evSlotVec;
+    new (&evSlotVec) std::vector<Scheduler::EventSlot>(3);
 }
 
 int main(int argc, char** argv) {

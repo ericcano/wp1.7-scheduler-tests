@@ -101,7 +101,7 @@ bool AlgorithmDependencyMap::isAlgIndependent(std::size_t algIdx) const {
 
 
 
-// bool NewEventContentManager::isEventComplete() const {
+// bool EventContentManager::isEventComplete() const {
 //    for (std::size_t alg = 0; alg < m_algContent.size(); ++alg) {
 //       if (!m_algContent.test(alg)) return false;
 //    }
@@ -109,18 +109,18 @@ bool AlgorithmDependencyMap::isAlgIndependent(std::size_t algIdx) const {
 // }
 
 
-// bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, const AlgorithmDependencyMap& depMap) const {
+// bool EventContentManager::isAlgExecutable(std::size_t algIdx, const AlgorithmDependencyMap& depMap) const {
 //    assert(algIdx < depMap.m_algDependencies.size());
 //    return depMap.m_algDependencies[algIdx].is_subset_of(m_algContent);
 // }
 
 
-// void NewEventContentManager::reset() {
+// void EventContentManager::reset() {
 //    m_algContent.reset();
 // }
 
-// void NewEventContentManager::dumpContents(const AlgorithmDependencyMap& depMap, std::ostream& os) const {
-//     os << "NewEventContentManager dump:\n";
+// void EventContentManager::dumpContents(const AlgorithmDependencyMap& depMap, std::ostream& os) const {
+//     os << "EventContentManager dump:\n";
 //     os << "Dependencies per algorithm:\n";
 //     for (size_t i = 0; i < depMap.m_algDependencies.size(); ++i) {
 //         os << "  Alg " << i << ": ";

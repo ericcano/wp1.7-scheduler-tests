@@ -12,11 +12,6 @@ add_executable(TestEventContentManager TestEventContentManager.cpp)
 target_link_libraries(TestEventContentManager PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
 add_test(NAME TestEventContentManager COMMAND TestEventContentManager)
 
-add_executable(TestNewEventContentManager TestNewEventContentManager.cpp)
-target_link_libraries(TestNewEventContentManager PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
-target_compile_options(TestNewEventContentManager PRIVATE -fno-access-control) # Allow private class members to be accessed in tests
-add_test(NAME TestNewEventContentManager COMMAND TestNewEventContentManager)
-
 add_executable(TestScheduler TestScheduler.cpp)
 target_compile_options(TestScheduler PRIVATE -fno-access-control) # Allow private class members to be accessed in tests
 target_link_libraries(TestScheduler PRIVATE CoScheduler ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})

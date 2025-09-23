@@ -27,7 +27,7 @@ Scheduler::EventSlot::~EventSlot() {
 
 void Scheduler::addAlgorithm(AlgorithmBase& alg) {
   if (m_runStarted) {
-    throw RuntimeError("In NewScheduler::addAlgorithm(): Algorithms cannot be added after run start");
+    throw RuntimeError("In Scheduler::addAlgorithm(): Algorithms cannot be added after run start");
   }
   m_algorithms.push_back(alg);
 }
@@ -44,7 +44,7 @@ void Scheduler::initSchedulerState()  {
   // Initialize all the algorithms.
   if (StatusCode status = AlgorithmBase::for_all(m_algorithms, &AlgorithmBase::initialize);
       !status) {
-     throw RuntimeError(std::string("In NewScheduler::initSchedulerState(): Algorithm initialization failed: ") + status.what());
+     throw RuntimeError(std::string("In Scheduler::initSchedulerState(): Algorithm initialization failed: ") + status.what());
   }
 
   // Then, create the event slots. The event slots are assigned an event number
@@ -109,7 +109,7 @@ Scheduler::RunQueue::ActionRequest Scheduler::scheduleNextEventInSlot(EventSlot&
   for (auto& alg: slot.algorithms) {
     std::scoped_lock lock(alg.mutex);
     if (alg.coroutine.empty() || alg.coroutine.isResumable()) {
-      std::cerr << "In NewScheduler::scheduleNextEventInSlot(): Attempting to schedule a new event in a slot where an algorithm has not completed." << std::endl;
+      std::cerr << "In Scheduler::scheduleNextEventInSlot(): Attempting to schedule a new event in a slot where an algorithm has not completed." << std::endl;
       std::cerr << "Event Slot State:" << std::endl;
       std::cerr << "Event Number: " << slot.eventNumber << std::endl;
       std::cerr << "Algorithms:" << std::endl;
@@ -125,7 +125,7 @@ Scheduler::RunQueue::ActionRequest Scheduler::scheduleNextEventInSlot(EventSlot&
         }
         std::cerr << std::endl;
       }
-      throw RuntimeError("In NewScheduler::scheduleNextEventInSlot(): Algorithm has not completed for previous event");
+      throw RuntimeError("In Scheduler::scheduleNextEventInSlot(): Algorithm has not completed for previous event");
     }
     alg.coroutine.setEmpty();
   }
@@ -193,8 +193,8 @@ void Scheduler::processRunQueue() {
         break; // Exit signal received
       }
       // std::cout << "Processing request from queue: slot=" << req.slot << ", alg=" << req.alg << ", type=" 
-      //           << (req.type == NewRunQueue::ActionRequest::ActionType::Start ? "Start" : 
-      //               req.type == NewRunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit")
+      //           << (req.type == RunQueue::ActionRequest::ActionType::Start ? "Start" : 
+      //               req.type == RunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit")
       //           << std::endl;
       processActionRequest(req);
     } else {
@@ -213,8 +213,8 @@ void Scheduler::processActionRequest(RunQueue::ActionRequest& req) {
   // }
 
   // std::cout << "Processing request: slot=" << req.slot << ", alg=" << req.alg << ", type=" 
-  //           << (req.type == NewRunQueue::ActionRequest::ActionType::Start ? "Start" : 
-  //               req.type == NewRunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit")
+  //           << (req.type == RunQueue::ActionRequest::ActionType::Start ? "Start" : 
+  //               req.type == RunQueue::ActionRequest::ActionType::Resume ? "Resume" : "Exit")
   //           << std::endl;
   // Validate the request.
   if (req.slot < 0 || req.slot >= m_eventSlotsNumber) {

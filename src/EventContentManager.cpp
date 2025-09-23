@@ -1,4 +1,4 @@
-#include "NewEventContentManager.hpp"
+#include "EventContentManager.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -17,7 +17,7 @@
 //  * @param objects list of string to be added to the bitset
 //  * @param objBitset the bitset.
 //  */
-// void NewEventContentManager::DataObjColl_t::setBits(const std::vector<std::string>& allObjectsVec,
+// void EventContentManager::DataObjColl_t::setBits(const std::vector<std::string>& allObjectsVec,
 //              const std::vector<std::string>& objects) {
 //    reset();
 //    assert(size() == allObjectsVec.size());
@@ -30,7 +30,7 @@
 // }
 
 
-// NewEventContentManager::NewEventContentManager(
+// EventContentManager::EventContentManager(
 //     const std::vector<std::reference_wrapper<AlgorithmBase>>& algs)
 //     : m_algDependencies(algs.size()),
 //       m_algDependants(algs.size()),
@@ -97,7 +97,7 @@
 // }
 
 
-// NewEventContentManager::NewEventContentManager(const NewEventContentManager& parent)
+// EventContentManager::EventContentManager(const EventContentManager& parent)
 //     : m_algDependencies(parent.m_algDependencies),
 //       m_algProducts(parent.m_algProducts),
 //       m_algContent(parent.m_algContent),
@@ -105,7 +105,7 @@
 // }
 
 
-// NewEventContentManager& NewEventContentManager::operator=(const NewEventContentManager& E) {
+// EventContentManager& EventContentManager::operator=(const EventContentManager& E) {
 //    if(this == &E) {
 //       return *this;
 //    }
@@ -117,21 +117,21 @@
 // }
 
 
-// StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg) {
+// StatusCode EventContentManager::setAlgExecuted(std::size_t alg) {
 //    assert(alg < m_algDependencies.size());
 //    std::lock_guard<std::mutex> guard(m_storeContentMutex);
 //    m_algContent |= m_algProducts[alg];
 //    return StatusCode::SUCCESS;
 // }
 
-StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg, 
+StatusCode EventContentManager::setAlgExecuted(std::size_t alg, 
     const AlgorithmDependencyMap & depMap) {
    assert(alg < depMap.m_algDependencies.size());
    m_algContent |= depMap.m_algProducts[alg];
    return StatusCode::SUCCESS;
 }
 
-// std::vector<std::size_t> NewEventContentManager::getDependantAndReadyAlgs(
+// std::vector<std::size_t> EventContentManager::getDependantAndReadyAlgs(
 //     std::size_t algIdx) const {
 //    assert(algIdx < m_algDependants.size());
 //    std::lock_guard<std::mutex> guard(m_storeContentMutex);
@@ -148,7 +148,7 @@ StatusCode NewEventContentManager::setAlgExecuted(std::size_t alg,
 //    return readyAlgs;
 // }
 
-std::vector<std::size_t> NewEventContentManager::getDependentAndReadyAlgs(std::size_t algIdx, 
+std::vector<std::size_t> EventContentManager::getDependentAndReadyAlgs(std::size_t algIdx, 
   const AlgorithmDependencyMap & depMap) const {
    assert(algIdx < depMap.m_algDependents.size());
    std::vector<std::size_t> readyAlgs;
@@ -164,18 +164,18 @@ std::vector<std::size_t> NewEventContentManager::getDependentAndReadyAlgs(std::s
    return readyAlgs;
 }
 
-bool NewEventContentManager::isAlgExecutable(std::size_t algIdx, 
+bool EventContentManager::isAlgExecutable(std::size_t algIdx, 
     const AlgorithmDependencyMap& depMap) const {
    assert(algIdx < depMap.m_algDependencies.size());
    return depMap.m_algDependencies[algIdx].is_subset_of(m_algContent);
 }
 
 
-void NewEventContentManager::reset() {
+void EventContentManager::reset() {
    m_algContent.reset();
 }
 
-// void NewEventContentManager::dumpContents(std::ostream& os) const {
+// void EventContentManager::dumpContents(std::ostream& os) const {
 //     std::lock_guard<std::mutex> guard(m_storeContentMutex);
 //     os << "EventContentManager dump:\n";
 //     os << "Dependencies per algorithm:\n";
@@ -221,8 +221,8 @@ void NewEventContentManager::reset() {
 //     os << "\n";
 // }
 
-void NewEventContentManager::dumpContents(const AlgorithmDependencyMap& depMap, std::ostream& os) const {
-    os << "NewEventContentManager dump:\n";
+void EventContentManager::dumpContents(const AlgorithmDependencyMap& depMap, std::ostream& os) const {
+    os << "EventContentManager dump:\n";
     os << "Dependencies per algorithm:\n";
     for (size_t i = 0; i < depMap.m_algDependencies.size(); ++i) {
         os << "  Alg " << i << ": ";

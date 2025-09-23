@@ -9,11 +9,11 @@
 #include <tbb/concurrent_queue.h>
 #include <cuda_runtime_api.h>
 #include "AlgorithmBase.hpp"
-#include "NewEventContentManager.hpp"
+#include "EventContentManager.hpp"
 #include "EventStore.hpp"
 
 
-namespace WP17NewScheduler {
+namespace WP17Scheduler {
    /**
     * @brief Base exception class
     */
@@ -26,7 +26,7 @@ namespace WP17NewScheduler {
    };
 }
 
-#define DEFINE_EXCEPTION(name) class name: public WP17NewScheduler::Exception { using WP17NewScheduler::Exception::Exception; }
+#define DEFINE_EXCEPTION(name) class name: public WP17Scheduler::Exception { using WP17Scheduler::Exception::Exception; }
 
 class AlgorithmContext;
 
@@ -169,7 +169,7 @@ public:
       /**
        * @brief Event content manager for the slot, managing data objects and dependencies.
        */
-      NewEventContentManager eventContentManager;
+      EventContentManager eventContentManager;
 
       /**
        * @brief Event store for the slot, storing data products and event information.

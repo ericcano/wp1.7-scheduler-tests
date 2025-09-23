@@ -81,7 +81,7 @@ void SecondAlgorithmGraph::launchGraphDelegated(cudaStream_t stream, AlgorithmCo
 // --- SecondAlgorithm Implementation ---
 SecondAlgorithm::SecondAlgorithm(bool verbose)
     : m_verbose(verbose) {
-       // TODO: returen to initialize after changing New algo API
+       // TODO: returen to initialize after changing algo API
       std::ignore = addDependency<int>("Object1");
       std::ignore = addProduct<int>("Object3");
     }

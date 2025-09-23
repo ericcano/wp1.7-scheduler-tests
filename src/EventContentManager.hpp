@@ -20,10 +20,10 @@ class StatusCode;
  * @note It is intended to be used inside the event slot scheduling and protected by the slot mutex.
  */
 
-class NewEventContentManager {
+class EventContentManager {
 public:
 
-   NewEventContentManager() = default;
+   EventContentManager() = default;
 
     /**
       * @brief Default constructor, only used at initialization of the scheduler slot.
@@ -33,8 +33,8 @@ public:
       m_algContent.resize(depMap.m_algDependencies[0].size());
     }
 
-   NewEventContentManager(const NewEventContentManager& E) = delete;
-   NewEventContentManager& operator=(const NewEventContentManager& E) = delete;
+   EventContentManager(const EventContentManager& E) = delete;
+   EventContentManager& operator=(const EventContentManager& E) = delete;
 
 
    /**

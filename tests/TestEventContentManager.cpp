@@ -14,18 +14,18 @@
 #include <gtest/gtest.h>
 
 #include "AlgorithmDependencyMap.hpp"
-#include "NewEventContentManager.hpp"
+#include "EventContentManager.hpp"
 #include "EventStore.hpp"
 #include "StatusCode.hpp"
 #include "MockAlgorithm.hpp"
 
-TEST(NewEventContentManagerTest, Chain) {
+TEST(EventContentManagerTest, Chain) {
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
     std::vector<std::reference_wrapper<AlgorithmBase>> chainAlgs{algA, algB, algC};
     AlgorithmDependencyMap depmap{chainAlgs};
-    NewEventContentManager manager;
+    EventContentManager manager;
     manager.resize(depmap);
     const auto& depMap = manager.getDependentAndReadyAlgs(0, depmap);
     ASSERT_EQ(depMap.size(), 0);
@@ -69,7 +69,7 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     // So the execution order is: A -> C -> D -> E -> B
     std::vector<std::reference_wrapper<AlgorithmBase>> algs{algA, algB, algC, algD, algE};
     AlgorithmDependencyMap depmap{algs};
-    NewEventContentManager ecm{};
+    EventContentManager ecm{};
     ecm.resize(depmap);
 
     // Helper lambda to check expected ready dependants, with file/line

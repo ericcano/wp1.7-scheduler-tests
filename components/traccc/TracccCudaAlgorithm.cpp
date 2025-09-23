@@ -70,7 +70,7 @@ StatusCode TracccCudaAlgorithm::initialize() {
 }
 
 
-NewAlgorithmBase::AlgCoInterface TracccCudaAlgorithm::execute(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface TracccCudaAlgorithm::execute(AlgorithmContext ctx) const {
    const auto& cells = m_cells[ctx.eventNumber % m_numEvents];
 
    traccc::edm::silicon_cell_collection::buffer cells_buffer{

@@ -16,7 +16,7 @@
 #include "NewAlgorithmBase.hpp"
 
 // Unique pointer members are moved insides execute. Not re-entrant.
-class TracccCellsAlgorithm : public NewAlgorithmBase {
+class TracccCellsAlgorithm : public AlgorithmBase {
 public:
    TracccCellsAlgorithm(int numEvents);
    StatusCode initialize() override;
@@ -32,7 +32,7 @@ private:
 };
 
 
-class TracccComputeAlgorithm : public NewAlgorithmBase {
+class TracccComputeAlgorithm : public AlgorithmBase {
 public:
    TracccComputeAlgorithm(int numEvents);
    StatusCode initialize() override;

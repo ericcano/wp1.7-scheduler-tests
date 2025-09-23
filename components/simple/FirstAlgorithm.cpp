@@ -95,7 +95,7 @@ StatusCode FirstAlgorithm::initialize() {
     return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::execute(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::execute(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -135,7 +135,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::execute(AlgorithmContext ctx) c
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraight(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraight(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -164,7 +164,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraight(AlgorithmContex
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -197,7 +197,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightDelegated(Algori
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightMutexed(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightMutexed(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -228,7 +228,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightMutexed(Algorith
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
     auto stream = CUDAThreadLocalStream::get();    if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -257,7 +257,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightThreadLocalStrea
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
     CUDAThreadLocalContext::check(); // Ensure the primary context is retained for this thread
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
@@ -287,7 +287,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeStraightThreadLocalConte
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeGraph(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -317,7 +317,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeGraph(AlgorithmContext c
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeGraphFullyDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeGraphFullyDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -350,7 +350,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeGraphFullyDelegated(Algo
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeCachedGraph(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeCachedGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }
@@ -380,7 +380,7 @@ NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeCachedGraph(AlgorithmCon
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface FirstAlgorithm::executeCachedGraphDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface FirstAlgorithm::executeCachedGraphDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(FirstAlgorithm) + " part1 start, " << ctx.info() << " tid=" << gettid() << std::endl;
     }

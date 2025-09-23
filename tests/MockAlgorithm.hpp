@@ -10,7 +10,7 @@
 /**
  * @brief A mock algorithm for testing purposes. Records algorithm execution. Can inject errors.
  */
-class MockAlgorithm : public NewAlgorithmBase {
+class MockAlgorithm : public AlgorithmBase {
 friend class MockSuspendingAlgorithm; // Allow the suspending variant to access private members
 public:
     MockAlgorithm(const std::vector<std::string>& dependencies,

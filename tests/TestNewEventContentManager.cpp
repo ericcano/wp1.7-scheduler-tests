@@ -25,7 +25,7 @@ TEST(NewEventContentManagerTest, Chain) {
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
-    std::vector<std::reference_wrapper<NewAlgorithmBase>> chainAlgs{algA, algB, algC};
+    std::vector<std::reference_wrapper<AlgorithmBase>> chainAlgs{algA, algB, algC};
     AlgorithmDependencyMap depmap{chainAlgs};
     NewEventContentManager manager;
     manager.resize(depmap);

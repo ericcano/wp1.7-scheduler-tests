@@ -9,7 +9,7 @@
 
 
 // Forward declarations.
-class NewAlgorithmBase;
+class AlgorithmBase;
 class StatusCode;
 
 /**
@@ -35,7 +35,7 @@ public:
     * @param algs A vector of references to AlgorithmBase objects.
     */
    explicit AlgorithmDependencyMap(
-       const std::vector<std::reference_wrapper<NewAlgorithmBase>>& algs);
+       const std::vector<std::reference_wrapper<AlgorithmBase>>& algs);
    AlgorithmDependencyMap(const AlgorithmDependencyMap& E) = delete;
    AlgorithmDependencyMap& operator=(const AlgorithmDependencyMap& E) = delete;
 

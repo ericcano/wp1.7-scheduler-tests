@@ -1,6 +1,6 @@
 #include "NewAlgorithmBase.hpp"
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraight(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeStraight(AlgorithmContext ctx) const {
   auto exec = execute(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -10,7 +10,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraight(AlgorithmCont
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeStraightDelegated(AlgorithmContext ctx) const {
   auto exec = execute(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -20,7 +20,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightDelegated(Algo
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightMutexed(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeStraightMutexed(AlgorithmContext ctx) const {
   auto exec = execute(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -30,7 +30,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightMutexed(Algori
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
   auto exec = execute(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -40,7 +40,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalStr
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
   auto exec = execute(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -50,7 +50,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeStraightThreadLocalCon
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraph(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeGraph(AlgorithmContext ctx) const {
   auto exec = execute(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -60,7 +60,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraph(AlgorithmContext
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraphFullyDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeGraphFullyDelegated(AlgorithmContext ctx) const {
   auto exec = executeGraph(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -70,7 +70,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeGraphFullyDelegated(Al
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraph(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeCachedGraph(AlgorithmContext ctx) const {
   auto exec = executeGraph(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution
@@ -80,7 +80,7 @@ NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraph(AlgorithmC
   co_return exec.getReturn();
 }
 
-NewAlgorithmBase::AlgCoInterface NewAlgorithmBase::executeCachedGraphDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface AlgorithmBase::executeCachedGraphDelegated(AlgorithmContext ctx) const {
   auto exec = executeCachedGraph(ctx);
   while (exec.isResumable()) {
     // Process the coroutine execution

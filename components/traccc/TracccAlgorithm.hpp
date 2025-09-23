@@ -14,7 +14,7 @@
 #include <traccc/seeding/track_params_estimation.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
-class TracccAlgorithm : public NewAlgorithmBase {
+class TracccAlgorithm : public AlgorithmBase {
 public:
    TracccAlgorithm(int numEvents);
    StatusCode initialize() override;

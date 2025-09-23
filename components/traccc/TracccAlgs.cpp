@@ -45,7 +45,7 @@ StatusCode TracccCellsAlgorithm::initialize() {
 }
 
 
-NewAlgorithmBase::AlgCoInterface TracccCellsAlgorithm::execute(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface TracccCellsAlgorithm::execute(AlgorithmContext ctx) const {
    SC_CHECK_YIELD(ctx.eventStore.record(std::move(m_detector), products()[0]));
    SC_CHECK_YIELD(ctx.eventStore.record(std::move(m_det_descr), products()[1]));
    SC_CHECK_YIELD(ctx.eventStore.record(std::move(m_cells), products()[2]));
@@ -73,7 +73,7 @@ StatusCode TracccComputeAlgorithm::initialize() {
 }
 
 
-NewAlgorithmBase::AlgCoInterface TracccComputeAlgorithm::execute(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface TracccComputeAlgorithm::execute(AlgorithmContext ctx) const {
    const traccc::default_detector::host* detector_dep = nullptr;
    SC_CHECK_YIELD(ctx.eventStore.retrieve(detector_dep, dependencies()[0]));
 

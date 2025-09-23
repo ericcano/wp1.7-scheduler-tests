@@ -28,7 +28,7 @@ private:
     std::mutex m_graphMutex;
 };
 
-class FirstAlgorithm : public NewAlgorithmBase {
+class FirstAlgorithm : public AlgorithmBase {
 public:
     // Constructor with verbose and error parameters
     FirstAlgorithm(bool errorEnabled = false, int errorEventId = -1, bool verbose = false);

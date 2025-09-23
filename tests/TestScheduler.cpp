@@ -25,7 +25,7 @@ TEST(SchedulerTest, RegisterFiveAlgorithms) {
 TEST(SchedulerTest, EventSlot) {
     MockAlgorithm::clear();
     MockAlgorithm algA{{}, {"prodA"}};
-    std::vector<std::reference_wrapper<NewAlgorithmBase>> algorithms{{algA}};
+    std::vector<std::reference_wrapper<AlgorithmBase>> algorithms{{algA}};
     AlgorithmDependencyMap depMap{algorithms};
     Scheduler::EventSlot evSlot;
     evSlot.initialize(depMap, -1);
@@ -57,7 +57,7 @@ TEST(SchedulerTest, initSchedulerState) {
         ASSERT_EQ(evSlot.eventNumber, i);
     }
     // We need to finalize the algorithms as they were initialized
-    assert (NewAlgorithmBase::for_all(sched.m_algorithms, &NewAlgorithmBase::finalize));
+    assert (AlgorithmBase::for_all(sched.m_algorithms, &AlgorithmBase::finalize));
 }
 
 

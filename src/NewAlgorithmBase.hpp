@@ -14,11 +14,11 @@
 /**
  * @brief Base class for algorithms. Algorithms express dependencies on products
  */
-class NewAlgorithmBase {
+class AlgorithmBase {
 public:
    using AlgCoInterface = CoInterface<Promise<StatusCode, StatusCode>>;
 
-   virtual ~NewAlgorithmBase() = default;
+   virtual ~AlgorithmBase() = default;
 
    virtual StatusCode initialize() = 0;
 
@@ -108,7 +108,7 @@ public:
       return m_products;
    }
 
-   static StatusCode for_all(const std::vector<std::reference_wrapper<NewAlgorithmBase>>& algs,
+   static StatusCode for_all(const std::vector<std::reference_wrapper<AlgorithmBase>>& algs,
                              auto F, auto&&... args) {
       for(auto& alg : algs) {
          if(StatusCode status = (alg.get().*F)(std::forward<decltype(args)>(args)...);

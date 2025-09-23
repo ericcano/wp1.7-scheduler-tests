@@ -11,7 +11,7 @@
 
 
 // Forward declarations.
-class NewAlgorithmBase;
+class AlgorithmBase;
 class StatusCode;
 
 

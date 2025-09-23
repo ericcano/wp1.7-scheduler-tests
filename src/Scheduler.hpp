@@ -74,7 +74,7 @@ public:
     * @return StatusCode indicating success or failure.
     */
    StatusCode finalizeAlgorithms() {
-      return NewAlgorithmBase::for_all(m_algorithms, &NewAlgorithmBase::finalize);
+      return AlgorithmBase::for_all(m_algorithms, &AlgorithmBase::finalize);
    }
 
    /**
@@ -87,7 +87,7 @@ public:
     * @brief Adds an algorithm to the algorithm list. This function should be called before running. 
     * @todo: Should this be a constant reference? 
     */
-   void addAlgorithm(NewAlgorithmBase& alg);
+   void addAlgorithm(AlgorithmBase& alg);
 
 private:
    /**
@@ -125,7 +125,7 @@ public:
       /**
        * @brief Algorithm coroutine.
        */
-      NewAlgorithmBase::AlgCoInterface coroutine; // Coroutine interface for the algorithm
+      AlgorithmBase::AlgCoInterface coroutine; // Coroutine interface for the algorithm
    };
 
    /**
@@ -257,7 +257,7 @@ private:
    std::atomic_int m_remainingEventsToComplete = 0;
 
    /// @brief List of algorithms registered in the scheduler.
-   std::vector<std::reference_wrapper<NewAlgorithmBase>> m_algorithms;
+   std::vector<std::reference_wrapper<AlgorithmBase>> m_algorithms;
 
    /// @brief The event content manager
    AlgorithmDependencyMap m_algoDependencyMap;

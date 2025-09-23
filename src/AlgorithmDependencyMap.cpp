@@ -31,7 +31,7 @@ void AlgorithmDependencyMap::DataObjColl_t::setBits(const std::vector<std::strin
 
 
 AlgorithmDependencyMap::AlgorithmDependencyMap(
-    const std::vector<std::reference_wrapper<NewAlgorithmBase>>& algs)
+    const std::vector<std::reference_wrapper<AlgorithmBase>>& algs)
     : m_algDependencies(algs.size()),
       m_algDependents(algs.size()),
       m_algProducts(algs.size()) {

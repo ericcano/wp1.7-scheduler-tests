@@ -25,7 +25,7 @@ Scheduler::EventSlot::~EventSlot() {
 }
 
 
-void Scheduler::addAlgorithm(NewAlgorithmBase& alg) {
+void Scheduler::addAlgorithm(AlgorithmBase& alg) {
   if (m_runStarted) {
     throw RuntimeError("In NewScheduler::addAlgorithm(): Algorithms cannot be added after run start");
   }
@@ -42,7 +42,7 @@ void Scheduler::initSchedulerState()  {
   new(&m_algoDependencyMap) AlgorithmDependencyMap(m_algorithms);
 
   // Initialize all the algorithms.
-  if (StatusCode status = NewAlgorithmBase::for_all(m_algorithms, &NewAlgorithmBase::initialize);
+  if (StatusCode status = AlgorithmBase::for_all(m_algorithms, &AlgorithmBase::initialize);
       !status) {
      throw RuntimeError(std::string("In NewScheduler::initSchedulerState(): Algorithm initialization failed: ") + status.what());
   }

@@ -23,7 +23,7 @@ TEST(NewEventContentManagerTest, Chain) {
     MockAlgorithm algA{{}, {"prodA"}};
     MockAlgorithm algB{{"prodA"}, {"prodB"}};
     MockAlgorithm algC{{"prodB"}, {"prodC"}};
-    std::vector<std::reference_wrapper<NewAlgorithmBase>> chainAlgs{algA, algB, algC};
+    std::vector<std::reference_wrapper<AlgorithmBase>> chainAlgs{algA, algB, algC};
     AlgorithmDependencyMap depmap{chainAlgs};
     NewEventContentManager manager;
     manager.resize(depmap);
@@ -67,7 +67,7 @@ TEST(EventContentManagerTest, MultipleDependencies) {
     // D -> E
     // E -> B
     // So the execution order is: A -> C -> D -> E -> B
-    std::vector<std::reference_wrapper<NewAlgorithmBase>> algs{algA, algB, algC, algD, algE};
+    std::vector<std::reference_wrapper<AlgorithmBase>> algs{algA, algB, algC, algD, algE};
     AlgorithmDependencyMap depmap{algs};
     NewEventContentManager ecm{};
     ecm.resize(depmap);

@@ -27,7 +27,7 @@
 #include "traccc/cuda/seeding/track_params_estimation.hpp"
 
 
-class TracccCudaAlgorithm : public NewAlgorithmBase {
+class TracccCudaAlgorithm : public AlgorithmBase {
 public:
    TracccCudaAlgorithm(int numEvents);
 

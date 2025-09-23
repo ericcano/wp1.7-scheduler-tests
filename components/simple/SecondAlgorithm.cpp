@@ -94,7 +94,7 @@ StatusCode SecondAlgorithm::initialize() {
     return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::execute(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -128,7 +128,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::execute(AlgorithmContext ctx) 
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -154,7 +154,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraight(AlgorithmConte
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -184,7 +184,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightDelegated(Algor
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
     }
@@ -212,7 +212,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightMutexed(Algorit
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStreams(AlgorithmContext ctx) const {
     auto stream = CUDAThreadLocalStream::get();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -239,7 +239,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalStre
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalContext(AlgorithmContext ctx) const {
     CUDAThreadLocalContext::check();
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " part1 start, " << ctx.info() << std::endl;
@@ -266,7 +266,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeStraightThreadLocalCont
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
@@ -294,7 +294,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraph(AlgorithmContext 
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
@@ -324,7 +324,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeGraphFullyDelegated(Alg
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }
@@ -352,7 +352,7 @@ NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraph(AlgorithmCo
     co_return StatusCode::SUCCESS;
 }
 
-NewAlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraphDelegated(AlgorithmContext ctx) const {
+AlgorithmBase::AlgCoInterface SecondAlgorithm::executeCachedGraphDelegated(AlgorithmContext ctx) const {
     if (m_verbose) {
         std::cout << MEMBER_FUNCTION_NAME(SecondAlgorithm) + " [graph] part1 start, " << ctx.info() << std::endl;
     }

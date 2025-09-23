@@ -28,7 +28,7 @@ private:
     std::mutex m_graphMutex;
 };
 
-class SecondAlgorithm : public NewAlgorithmBase {
+class SecondAlgorithm : public AlgorithmBase {
 public:
     // Constructor with verbose parameter
     explicit SecondAlgorithm(bool verbose = false);

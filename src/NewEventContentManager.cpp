@@ -31,7 +31,7 @@
 
 
 // NewEventContentManager::NewEventContentManager(
-//     const std::vector<std::reference_wrapper<NewAlgorithmBase>>& algs)
+//     const std::vector<std::reference_wrapper<AlgorithmBase>>& algs)
 //     : m_algDependencies(algs.size()),
 //       m_algDependants(algs.size()),
 //       m_algProducts(algs.size()),

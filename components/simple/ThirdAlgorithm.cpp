@@ -4,10 +4,8 @@
 #include <future>
 
 #include "CudaKernels.cuh"
-#include "EventContext.hpp"
 #include "EventStore.hpp"
 #include "MemberFunctionName.hpp"
-#include "Scheduler.hpp"
 #include "CUDAThread.hpp"
 #include "CUDAMutex.hpp"
 #include "CUDAThreadLocalStream.hpp"

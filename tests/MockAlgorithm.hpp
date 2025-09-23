@@ -1,6 +1,5 @@
 #pragma once
 #include "NewAlgorithmBase.hpp"
-#include "EventContext.hpp"
 #include <vector>
 #include <string>
 #include <cassert>

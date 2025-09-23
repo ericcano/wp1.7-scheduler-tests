@@ -13,10 +13,8 @@
 
 #include <gtest/gtest.h>
 
-#include "AlgorithmBase.hpp"
 #include "NewAlgoDependencyMap.hpp"
 #include "NewEventContentManager.hpp"
-#include "EventContext.hpp"
 #include "EventStore.hpp"
 #include "StatusCode.hpp"
 #include "MockAlgorithm.hpp"

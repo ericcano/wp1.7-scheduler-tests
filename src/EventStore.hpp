@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "EventContext.hpp"
 #include "StatusCode.hpp"
 
 #pragma GCC optimize("O0")
@@ -195,34 +194,3 @@ private:
    std::map<KeyType, ValueType> m_store;    // The map storing the elements with their associated mutexes
 };
 
-/**
- * @brief Singleton registry for event stores, indexed by slot number.
- * Initialized in Scheduler::initialize(). Then referenced by `eventStoreOf()` function.
- */
-class EventStoreRegistry {
-// Private first to allow static functions to access it.
-private:
-   EventStoreRegistry() = default;
-
-   /// Singleton instance handler
-   static std::vector<EventStore>& gInstance() {
-      static std::vector<EventStore> eventStores;
-      return eventStores;
-   }
-public:
-   EventStoreRegistry(const EventStoreRegistry&) = delete;
-   EventStoreRegistry& operator=(const EventStoreRegistry&) = delete;
-
-   /**
-    * @brief Singleton accessor and instance creator/holder.
-    * @return reference to the singleton instance of EventStoreRegistry.
-    */
-   static EventStore& of(const EventContext& ctx) {
-      return gInstance().at(ctx.slotNumber);
-   }
-
-   static void initialize(std::size_t slots) {
-      gInstance().resize(slots);
-   }
-   
-};

@@ -14,8 +14,6 @@
 #include <vecmem/memory/host_memory_resource.hpp>
 
 #include "NewAlgorithmBase.hpp"
-#include "EventContext.hpp"
-
 
 // Unique pointer members are moved insides execute. Not re-entrant.
 class TracccCellsAlgorithm : public NewAlgorithmBase {

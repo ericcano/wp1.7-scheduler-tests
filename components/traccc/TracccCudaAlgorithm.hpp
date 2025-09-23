@@ -1,5 +1,6 @@
 #pragma once
 
+#include "NewAlgorithmBase.hpp"
 
 #include <detray/detectors/bfield.hpp>
 #include <detray/navigation/navigator.hpp>
@@ -18,8 +19,6 @@
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/utils/cuda/async_copy.hpp>
 
-#include "AlgorithmBase.hpp"
-#include "EventContext.hpp"
 #include "traccc/cuda/clusterization/measurement_sorting_algorithm.hpp"
 #include "traccc/cuda/finding/finding_algorithm.hpp"
 #include "traccc/cuda/fitting/fitting_algorithm.hpp"
@@ -28,12 +27,12 @@
 #include "traccc/cuda/seeding/track_params_estimation.hpp"
 
 
-class TracccCudaAlgorithm : public AlgorithmBase {
+class TracccCudaAlgorithm : public NewAlgorithmBase {
 public:
    TracccCudaAlgorithm(int numEvents);
 
    StatusCode initialize() override;
-   AlgCoInterface execute(EventContext ctx) const override;
+   AlgCoInterface execute(NewAlgoContext ctx) const override;
    StatusCode finalize() override;
 
 private:

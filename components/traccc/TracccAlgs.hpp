@@ -13,16 +13,16 @@
 #include <traccc/seeding/track_params_estimation.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
-#include "AlgorithmBase.hpp"
+#include "NewAlgorithmBase.hpp"
 #include "EventContext.hpp"
 
 
 // Unique pointer members are moved insides execute. Not re-entrant.
-class TracccCellsAlgorithm : public AlgorithmBase {
+class TracccCellsAlgorithm : public NewAlgorithmBase {
 public:
    TracccCellsAlgorithm(int numEvents);
    StatusCode initialize() override;
-   AlgCoInterface execute(EventContext ctx) const override;
+   AlgCoInterface execute(NewAlgoContext ctx) const override;
    StatusCode finalize() override;
 
 private:
@@ -34,11 +34,11 @@ private:
 };
 
 
-class TracccComputeAlgorithm : public AlgorithmBase {
+class TracccComputeAlgorithm : public NewAlgorithmBase {
 public:
    TracccComputeAlgorithm(int numEvents);
    StatusCode initialize() override;
-   AlgCoInterface execute(EventContext ctx) const override;
+   AlgCoInterface execute(NewAlgoContext ctx) const override;
    StatusCode finalize() override;
 
 private:

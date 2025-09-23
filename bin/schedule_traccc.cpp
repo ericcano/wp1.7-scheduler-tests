@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "Scheduler.hpp"
+#include "NewScheduler.hpp"
 #include "StatusCode.hpp"
 #include "TracccAlgorithm.hpp"
 #include "TracccAlgs.hpp"
@@ -9,7 +9,7 @@
 
 int main() {
    // Create the scheduler.
-   Scheduler scheduler(4, 4);
+   NewScheduler scheduler(4, 4);
 
    // Create the algorithms.
    TracccCellsAlgorithm cellsAlg(10);
@@ -20,7 +20,7 @@ int main() {
    scheduler.addAlgorithm(computeAlg);
 
    // Run the scheduler.
-   Scheduler::RunStats stats;
+   NewScheduler::RunStats stats;
    auto w = scheduler.run(1000, stats).what();
    std::cout << w << std::endl;
    return EXIT_SUCCESS;

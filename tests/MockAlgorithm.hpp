@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <cassert>
-#include <format>
 
 #pragma GCC optimize("O0")
 
@@ -39,13 +38,13 @@ public:
         for (const auto& dep : dependencies()) {
             const int* input = nullptr;
             SC_CHECK_CO_RETURN(ctx.eventStore.retrieve(input, dep));
-            // std::cout << std::format("MockAlgorithm event {}, alg {} retrieved dependency {} with value {}\n", ctx.eventNumber, ctx.algorithmNumber, dep, *input);
+            // std::cout << "MockAlgorithm event " << ctx.eventNumber << ", alg " << ctx.algorithmNumber << " retrieved dependency " << dep << " with value " << *input << "\n";
             (void)input; // Suppress unused variable warning
         }
         // Produce the products
         for (const auto& prod : products()) {
             auto output = std::make_unique<int>(-1);
-            // std::cout << std::format("MockAlgorithm event {}, alg {} recording product {}\n", ctx.eventNumber, ctx.algorithmNumber, prod);
+            // std::cout << "MockAlgorithm event " << ctx.eventNumber << ", alg " << ctx.algorithmNumber << " recording product " << prod << "\n";
             SC_CHECK_CO_RETURN(ctx.eventStore.record(std::move(output), prod));
         }
         // Record the execution
@@ -103,7 +102,7 @@ public:
         for (const auto& dep : dependencies()) {
             const int* input = nullptr;
             SC_CHECK_CO_RETURN(ctx.eventStore.retrieve(input, dep));
-            // std::cout << std::format("MockSuspendingAlgorithm event {}, alg {} retrieved dependency {} with value {}\n", ctx.eventNumber, ctx.algorithmNumber, dep, *input);
+            // std::cout << "MockSuspendingAlgorithm event " << ctx.eventNumber << ", alg " << ctx.algorithmNumber << " retrieved dependency " << dep << " with value " << *input << "\n";
             (void)input; // Suppress unused variable warning
         }
         // Already inject resumption here (simulate CUDA callback)
@@ -114,7 +113,7 @@ public:
         // Produce the products
         for (const auto& prod : products()) {
             auto output = std::make_unique<int>(-1);
-            // std::cout << std::format("MockSuspendingAlgorithm event {}, alg {} recording product {}\n", ctx.eventNumber, ctx.algorithmNumber, prod);
+            // std::cout << "MockSuspendingAlgorithm event " << ctx.eventNumber << ", alg " << ctx.algorithmNumber << " recording product " << prod << "\n";
             SC_CHECK_CO_RETURN(ctx.eventStore.record(std::move(output), prod));
         }
         // Record the execution

@@ -12,8 +12,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <atomic>
-#include <format>   
+#include <atomic> 
 
 #include "EventStore.hpp"
 #include "StatusCode.hpp"

@@ -3,9 +3,9 @@
 
 #include "Scheduler.hpp"
 #include "StatusCode.hpp"
-#include "TracccAlgorithm.hpp"
+//#include "TracccAlgorithm.hpp"
 #include "TracccAlgs.hpp"
-#include "TracccCudaAlgorithm.hpp"
+//#include "TracccCudaAlgorithm.hpp"
 
 int main() {
    // Create the scheduler.

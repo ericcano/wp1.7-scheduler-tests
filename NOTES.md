@@ -118,7 +118,7 @@ $ find ../build/ -name *.ptx | grep -Pn '[^[:ascii:]]' `cat`
 
 We can simply massage the `detray` source (included by `traccc`):
 ```
-find ../build/ -name *.ptx | grep -Pn '[^[:ascii:]]' `cat` | cut -d : -f 3 | cut -c 3- | sort | uniq | perl -i -pe 's/[^[:ascii:]]/X/g' `cat`
+find ../build/ -name *.ptx | grep -Pn '[^[:ascii:]]' `cat` | cut -d : -f 3 | cut -c 3- | sort -u | perl -i -pe 's/[^[:ascii:]]/X/g' `cat`
 ```
 and compilation completes in debug mode.
 

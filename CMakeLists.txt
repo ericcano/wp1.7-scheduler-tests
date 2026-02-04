@@ -80,8 +80,8 @@ add_executable(schedule_simple bin/schedule_simple.cpp)
 target_link_libraries(schedule_simple PRIVATE CoScheduler components_simple)
 
 if(BUILD_TRACCC)
-  add_executable(schedule_traccc bin/schedule_traccc.cpp)
-  target_link_libraries(schedule_traccc PRIVATE CoScheduler components_traccc)
+  # add_executable(schedule_traccc bin/schedule_traccc.cpp)
+  # target_link_libraries(schedule_traccc PRIVATE CoScheduler components_traccc)
 endif()
 
 # Add the tests.

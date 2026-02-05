@@ -19,6 +19,9 @@ builddir="."
 # internal options
 internalOption="--input-events 10 "
 
+# Additional arguments to pass through
+passthrough_args=()
+
 # Print help
 print_help() {
     cat <<EOF
@@ -33,6 +36,7 @@ Options:
   --verbose               Enable verbose output (default: off)
   --help                  Show this help message
   --launchStrategy <single|graph|cachedGraphs|straightLaunches|straightDelegated|...>
+  --                      Pass all remaining arguments directly to the underlying command
 EOF
 }
 
@@ -60,6 +64,8 @@ while [[ $# -gt 0 ]]; do
             launchStrategy="$2"; shift 2;;
         --builddir)
             builddir="$2"; shift 2;;
+        --)
+            shift; passthrough_args=("$@"); break;;
         *)
             echo "Unknown option: $1"; print_help; exit 1;;
     esac
@@ -72,6 +78,12 @@ cmd=("$builddir/bin/traccc_throughput_mt_cuda")
 cmd+=("--cpu-threads" "$threads")
 cmd+=("--cold-run-events" "$warmupEvents")
 cmd+=("--processed-events" "$events")
+cmd+=("--concurrent-slots" "$streams")
+
+# Add passthrough arguments
+if [[ ${#passthrough_args[@]} -gt 0 ]]; then
+    cmd+=("${passthrough_args[@]}")
+fi
 
 
 # Call the real binary, print output as it goes, and capture for parsing
@@ -87,7 +99,7 @@ output=$(cat "$tmpfile")
 event_count="$events"
 
 # Extract event processing throughput line
-event_line=$(awk '/^Throughput:/ {p=1; next} p && /Event processing/ {print; exit}' "$tmpfile")
+event_line=$(awk '/Throughput:/ {p=1; next} p && /Event processing/ {print; exit}' "$tmpfile")
 
 if [[ $event_line =~ ([0-9.]+)\ ms/event,\ ([0-9.eE+-]+)\ events/s ]]; then
     ms_per_event="${BASH_REMATCH[1]}"

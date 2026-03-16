@@ -33,12 +33,33 @@ enable_language(CUDA)
 #
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+include(FetchContent)
+# Require a recent Boost that dependant traccc requires (for fiber).
+# Tell the user what's happening.
+message( STATUS "Building recent Boost as part of the scheduler tests" )
+
+# Components required by the project.
+set(BOOST_ENABLE_CMAKE ON )
+set(BOOST_SKIP_INSTALL_RULES OFF)
+set(BUILD_SHARED_LIBS ON)
+
+FetchContent_Declare( Boost OVERRIDE_FIND_PACKAGE
+   URL https://github.com/boostorg/boost/releases/download/boost-1.90.0/boost-1.90.0-cmake.tar.xz
+   URL_HASH SHA256=aca59f889f0f32028ad88ba6764582b63c916ce5f77b31289ad19421a96c555f
+   DOWNLOAD_EXTRACT_TIMESTAMP ON
+)
+FetchContent_MakeAvailable( Boost )
+find_package(Boost 1.90 REQUIRED)
+
+# Stolen from Bosst's CMake files. Unclear why we should repeat here (needed by ACTS).
+add_library(Boost::boost INTERFACE IMPORTED)
+set_property(TARGET Boost::boost APPEND PROPERTY INTERFACE_LINK_LIBRARIES Boost::headers)
+
 # Set up the built-in externals.
 add_subdirectory(externals)
 
 find_package(TBB REQUIRED)
 find_package(CUDAToolkit REQUIRED)
-find_package(Boost REQUIRED)
 if(BUILD_PATATRACK)
   find_package(Patatrack REQUIRED)
 endif()

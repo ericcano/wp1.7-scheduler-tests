@@ -21,6 +21,7 @@
 #include "AlgorithmBase.hpp"
 #include "EventContext.hpp"
 #include "traccc/cuda/clusterization/measurement_sorting_algorithm.hpp"
+#include "traccc/cuda/utils/thread_delegator.hpp"
 #include "traccc/cuda/finding/finding_algorithm.hpp"
 #include "traccc/cuda/fitting/fitting_algorithm.hpp"
 #include "traccc/cuda/seeding/seeding_algorithm.hpp"

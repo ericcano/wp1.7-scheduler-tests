@@ -22,7 +22,7 @@ TracccCudaAlgorithm::TracccCudaAlgorithm(int numEvents)
       m_stream{},
       m_copy{m_stream.cudaStream()},
       m_ca_cuda{m_mr, m_copy, m_stream, traccc::clustering_config{256, 16, 8, 256}},
-      m_ms_cuda{m_copy, m_stream},
+      m_ms_cuda{m_mr, m_copy, m_stream, traccc::cuda::thread_delegator::get()},
       m_sf_cuda{m_mr, m_copy, m_stream},
       m_sa_cuda{traccc::seedfinder_config{},
                 {traccc::seedfinder_config{}},
